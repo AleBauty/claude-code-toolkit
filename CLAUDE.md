@@ -1,7 +1,7 @@
 # claude-code-toolkit — desarrollo de software
 
 **Esta carpeta es la caja de herramientas, no un repo de trabajo.** Acá viven
-los 14 agentes, los hooks y la metodología. Cada sistema va en **su propio
+los 15 agentes, los hooks y la metodología. Cada sistema va en **su propio
 repositorio**, afuera de acá.
 
 Sistema nuevo: `python3 nuevo.py ~/repos/<sistema>`. Eso copia los agentes y
@@ -25,7 +25,8 @@ El proceso completo está en `COMO-CREAR-SISTEMA.md`.
 
 | Agente | Para qué |
 |---|---|
-| `requisitos` | Qué tiene que hacer el sistema, criterios de aceptación, alcance |
+| `descubrimiento` | **Si** conviene construir: construir, comprar algo existente, o no hacer nada |
+| `requisitos` | **Qué** tiene que hacer lo que ya se decidió construir: criterios de aceptación, alcance |
 | `ux-ui` | Cómo se usa antes de cómo se construye. Los 5 estados de cada pantalla |
 | `arquitecto` | Stack, estructura, límites entre componentes, ADRs |
 
@@ -58,7 +59,7 @@ El proceso completo está en `COMO-CREAR-SISTEMA.md`.
 ## Orden que evita retrabajo
 
 ```
-requisitos → ux-ui → arquitecto → base-datos → backend/frontend/mobile
+descubrimiento → requisitos → ux-ui → arquitecto → base-datos → backend/frontend/mobile
                                                     ↓
                                       qa → revisor → seguridad
                                                     ↓
@@ -71,6 +72,11 @@ gestion-entrega y datos-analitica entran cuando hacen falta:
 
 No es rígido, pero **construir antes de tener claro el requisito** es la forma
 más cara de equivocarse.
+
+**`descubrimiento` va primero, antes de `requisitos`.** Uno decide *si* se
+construye; el otro, *qué*. Especificar bien algo que convenía comprar, o que
+no hacía falta, es la forma más prolija de tirar el trabajo. Si el veredicto
+es COMPRAR o NO HACER NADA, el flujo termina ahí.
 
 El `revisor` trabaja con ojos frescos: no debe ser el mismo agente que escribió
 el código.

@@ -86,7 +86,7 @@ git status --short
 ls .claude/agents/ | wc -l
 ```
 
-Tienen que aparecer 14 agentes.
+Tienen que aparecer 15 agentes.
 
 Probá que leen el contexto. Pedile al usuario que escriba:
 
@@ -94,7 +94,7 @@ Probá que leen el contexto. Pedile al usuario que escriba:
 ¿Qué agentes hay y en qué orden conviene usarlos?
 ```
 
-Debería nombrar el flujo requisitos → arquitecto → construcción → verificación.
+Debería nombrar el flujo descubrimiento → requisitos → arquitecto → construcción → verificación.
 
 ### Paso 5 — Cierre
 

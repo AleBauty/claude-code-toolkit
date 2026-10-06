@@ -1,6 +1,6 @@
 # Sistema nuevo
 
-**Un repo por sistema.** Esta carpeta es la caja de herramientas: los 14
+**Un repo por sistema.** Esta carpeta es la caja de herramientas: los 15
 agentes, los hooks y la metodologia. El sistema va en su propio repositorio.
 
 ---
@@ -38,7 +38,7 @@ Lo dificil de revertir va a un ADR.
 python3 nuevo.py ~/repos/<sistema>
 ```
 
-Copia los 14 agentes, los hooks activos y la metodologia, crea la estructura,
+Copia los 15 agentes, los hooks activos y la metodologia, crea la estructura,
 inicia git y commitea **solo el .gitignore** como primer commit.
 
 Despues:

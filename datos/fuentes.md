@@ -63,8 +63,11 @@ Ninguno viene de una colección externa: son diseño propio para este contexto.
 | `ux-ui` | Producto y diseño existían implícitos dentro de `frontend`. El resultado de eso es que el diseño sale de lo que es fácil de programar |
 | `datos-analitica` | `base-datos` modela para transacciones. Modelar para preguntas es otro problema con otras respuestas |
 | `gestion-entrega` | Partir el trabajo, estimar y controlar alcance no era de nadie. Es donde se pierde más tiempo en proyectos de una persona |
+| `descubrimiento` | Nadie preguntaba *si* convenía construir. `requisitos` arrancaba asumiendo que sí, y la opción de comprar algo existente nunca aparecía |
 
-**La razón de parar en 14.** Cada agente nuevo suma una descripción que compite
-con las demás en el enrutado. 14 ya es bastante: si uno de estos nunca se usa,
-conviene borrarlo en vez de dejarlo. La métrica no es cuántos hay, es si cada
+**La razón de parar en 15.** Cada agente nuevo suma una descripción que compite
+con las demás en el enrutado. El 15 (`descubrimiento`) entró solo después de
+una prueba ciega de enrutado: 15 consultas, 6 de ellas de otros agentes, y no
+se robó ninguna. Un agente 16 tiene que pasar la misma prueba. Si uno de estos
+nunca se usa, conviene borrarlo en vez de dejarlo. La métrica no es cuántos hay, es si cada
 uno se activa cuando corresponde.

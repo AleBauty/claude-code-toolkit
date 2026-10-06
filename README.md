@@ -1,6 +1,6 @@
 # Claude Code Toolkit
 
-Caja de herramientas para construir software. 14 agentes, una metodología y
+Caja de herramientas para construir software. 15 agentes, una metodología y
 tres hooks de verificación automática.
 
 > Proyecto personal, no oficial. No está afiliado a Anthropic ni avalado por
@@ -14,7 +14,7 @@ tres hooks de verificación automática.
 1. Abrir esta carpeta en VS Code.
 2. Abrir Claude Code **desde esta carpeta**.
 3. `Leé SETUP.md y ejecutalo`
-4. Verificar con `/agents` que aparezcan los 14.
+4. Verificar con `/agents` que aparezcan los 15.
 
 ## Lo que hace distinto a este espacio
 
@@ -41,19 +41,24 @@ corrido.
 Un hook que sale con código 2 **corta la acción** y le devuelve el error a Claude
 para que lo corrija. No es una promesa: es un script.
 
-## Los 14 agentes
+## Los 15 agentes
 
 Pensados como un equipo de desarrollo completo, no como una lista de roles.
 
 | Etapa | Agentes |
 |---|---|
-| Antes de codear | `requisitos`, `ux-ui`, `arquitecto` |
+| Antes de codear | `descubrimiento`, `requisitos`, `ux-ui`, `arquitecto` |
 | Construcción | `backend`, `frontend`, `mobile`, `base-datos`, `datos-analitica` |
 | Verificación | `qa`, `revisor`, `seguridad` |
 | Operación | `infraestructura`, `documentacion` |
 | Coordinación | `gestion-entrega` |
 
-Tres separaciones que son a propósito:
+Cuatro separaciones que son a propósito:
+
+**`descubrimiento` aparte de `requisitos`** — uno decide *si* se construye
+(construir, comprar algo existente o no hacer nada); el otro define *qué*.
+Si es el mismo, la pregunta "¿conviene comprarlo?" nunca se hace: quien
+especifica ya asumió que se construye. Va primero.
 
 **`revisor` aparte de `qa`** — revisar con ojos frescos solo funciona si no
 escribiste vos el código.
@@ -75,7 +80,7 @@ claude-code-toolkit/
 ├── METODOLOGIA.md        reglas de proceso
 ├── SETUP.md              instalación
 ├── .claude/
-│   ├── agents/           los 14
+│   ├── agents/           los 15
 │   ├── hooks/            verificación automática
 │   └── settings.json.example   base; activar-hooks.py genera settings.json
 ├── datos/

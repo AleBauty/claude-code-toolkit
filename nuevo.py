@@ -161,11 +161,11 @@ Creado desde la caja de herramientas `{caja}/` @ {ver}
 ## Orden que evita retrabajo
 
 ```
-requisitos -> ux-ui -> arquitecto -> base-datos -> backend/frontend/mobile
-                                                       |
-                                         qa -> revisor -> seguridad
-                                                       |
-                                   infraestructura -> documentacion
+descubrimiento -> requisitos -> ux-ui -> arquitecto -> base-datos -> backend/frontend/mobile
+                                                                         |
+                                                           qa -> revisor -> seguridad
+                                                                         |
+                                                     infraestructura -> documentacion
 ```
 
 ## Git
