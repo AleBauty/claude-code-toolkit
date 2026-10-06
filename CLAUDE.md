@@ -92,7 +92,7 @@ En `.claude/hooks/` hay tres scripts que corren automáticamente:
 | Hook | Cuándo | Qué hace |
 |---|---|---|
 | `verificar.py` | después de Edit/Write | corre lint y typecheck; **bloquea** si fallan |
-| `proteger.py` | antes de Bash | **bloquea** comandos destructivos |
+| `proteger.py` | antes de Bash y PowerShell | **bloquea** comandos destructivos |
 | `secretos.py` | antes de Edit/Write | **bloquea** si detecta credenciales |
 
 Esto es lo que diferencia este espacio de un catálogo de prompts: no es el modelo

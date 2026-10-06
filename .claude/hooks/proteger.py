@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 """
-Hook PreToolUse sobre Bash: bloquea comandos destructivos o peligrosos.
+Hook PreToolUse sobre Bash y PowerShell: bloquea comandos destructivos o peligrosos.
+
+Las reglas de PowerShell/cmd son los equivalentes de las de Unix, no una
+lista aparte: misma intencion, otra sintaxis. Las de git y SQL ya sirven
+para cualquier shell.
+
+El contrato es "bloqueo lo que destruye". Lo que cambia la postura de
+seguridad (Set-ExecutionPolicy, etc.) no entra aca: va como control aparte.
+
+DELIBERADO: los patrones se buscan en el texto del comando, sin interpretarlo.
+Un `echo "rm -rf ..."` o un string con "reg delete" adentro tambien se bloquea.
+No es un bug: un hook de este tipo tiene que errar hacia bloquear de mas.
+Parsear el comando para distinguir un string de una ejecucion real abre la
+puerta a evadirlo. tests/test_proteger.py fija este comportamiento.
 
 Exit 2 = bloquea. Exit 0 = deja pasar.
 """
@@ -24,6 +37,28 @@ REGLAS = [
     (r"\bgit\s+clean\s+-[a-zA-Z]*f",   "git clean borra archivos sin seguimiento"),
     (r"curl[^|]*\|\s*(sudo\s+)?(ba)?sh", "descargar y ejecutar directo"),
     (r"wget[^|]*\|\s*(sudo\s+)?(ba)?sh", "descargar y ejecutar directo"),
+
+    # --- PowerShell / cmd: equivalentes de las reglas de arriba ---
+    # rm -rf: Remove-Item y sus alias con -Recurse o -Force (PowerShell acepta prefijos: -r, -fo)
+    (r"\b(Remove-Item|ri|rm|rmdir|rd|del|erase)\b[^;|\n]*\s-(r\w*|fo\w*)\b",
+     "borrado recursivo/forzado (PowerShell)"),
+    (r"\b(rd|rmdir)\b[^;&|\n]*\s/s\b", "borrado recursivo (cmd)"),
+    (r"\b(del|erase)\b[^;&|\n]*\s/[sqf]\b", "borrado recursivo/forzado/sin confirmar (cmd)"),
+    # mkfs / dd a disco
+    (r"\b(Format-Volume|Clear-Disk|Initialize-Disk|Remove-Partition)\b", "formateo de disco (PowerShell)"),
+    (r"\bformat(\.com)?\s+[a-z]:", "formateo de disco (cmd)"),
+    (r"\bdiskpart\b", "particionado de disco (cmd)"),
+    # rm -rf sobre el registro: borrar ramas puede dejar Windows inservible
+    # (Remove-Item HKLM:\... -Recurse ya lo cubre la regla de Remove-Item)
+    (r"\breg(\.exe)?\s+delete\b", "borrado del registro de Windows"),
+    # chmod 777: escritura o control total para todos
+    (r"\bicacls\b.*\s/grant(:r)?\s+[\"']?(\*S-1-1-0|Everyone|Todos)[\"']?:\S*[FM]\b",
+     "permisos de escritura para todos (icacls)"),
+    # curl | sh
+    (r"\b(iwr|irm|Invoke-WebRequest|Invoke-RestMethod|curl|wget)\b[^|]*\|\s*(iex|Invoke-Expression)\b",
+     "descargar y ejecutar directo (PowerShell)"),
+    (r"\b(iex|Invoke-Expression)\b.*\b(DownloadString|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b",
+     "descargar y ejecutar directo (PowerShell)"),
 ]
 
 
