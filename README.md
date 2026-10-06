@@ -1,0 +1,117 @@
+# Sistemas
+
+Caja de herramientas para construir software. 14 agentes, una metodología y
+tres hooks de verificación automática.
+
+**No es un repo de trabajo.** Cada sistema va en su propio repositorio;
+`nuevo.py` lo crea copiándole los agentes y los hooks.
+
+## Instalación
+
+1. Abrir esta carpeta en VS Code.
+2. Abrir Claude Code **desde esta carpeta**.
+3. `Leé SETUP.md y ejecutalo`
+4. Verificar con `/agents` que aparezcan los 14.
+
+## Lo que hace distinto a este espacio
+
+La mayoría de las colecciones de agentes son **prompts**: un "backend-developer"
+que escribe código y dice que está bien.
+
+Acá hay tres capas:
+
+**1. Agentes** — uno por dominio real, con criterios concretos y sesgo explícito
+hacia la solución simple.
+
+**2. Metodología** (`METODOLOGIA.md`) — reglas de proceso que aplican a todos.
+La central: *evidencia sobre afirmaciones*. Nada se declara terminado sin haberlo
+corrido.
+
+**3. Hooks** — verificación determinista que no depende del modelo:
+
+| Hook | Cuándo | Qué hace |
+|---|---|---|
+| `verificar.py` | después de editar | lint + typecheck, **bloquea** si fallan |
+| `proteger.py` | antes de un Bash | **bloquea** `rm -rf`, `DROP TABLE`, `--force`, `curl \| sh` |
+| `secretos.py` | antes de escribir | **bloquea** si detecta API keys, tokens, claves privadas |
+
+Un hook que sale con código 2 **corta la acción** y le devuelve el error a Claude
+para que lo corrija. No es una promesa: es un script.
+
+## Los 14 agentes
+
+Pensados como un equipo de desarrollo completo, no como una lista de roles.
+
+| Etapa | Agentes |
+|---|---|
+| Antes de codear | `requisitos`, `ux-ui`, `arquitecto` |
+| Construcción | `backend`, `frontend`, `mobile`, `base-datos`, `datos-analitica` |
+| Verificación | `qa`, `revisor`, `seguridad` |
+| Operación | `infraestructura`, `documentacion` |
+| Coordinación | `gestion-entrega` |
+
+Tres separaciones que son a propósito:
+
+**`revisor` aparte de `qa`** — revisar con ojos frescos solo funciona si no
+escribiste vos el código.
+
+**`ux-ui` aparte de `frontend`** — uno decide cómo se usa, el otro lo
+construye. Si es el mismo, el diseño sale de lo que es fácil de programar en
+vez de lo que la persona necesita. Y va **antes** de `arquitecto`.
+
+**`datos-analitica` aparte de `base-datos`** — transaccional (escribir rápido,
+un registro por vez) contra analítico (leer mucho, agregar, histórico). El
+mismo esquema no sirve bien para las dos cosas; mezclarlos es lo que hace que
+un dashboard tire abajo la base de producción.
+
+## Estructura
+
+```
+sistemas/
+├── CLAUDE.md             contexto y enrutado
+├── METODOLOGIA.md        reglas de proceso
+├── SETUP.md              instalación
+├── .claude/
+│   ├── agents/           los 14
+│   ├── hooks/            verificación automática
+│   └── settings.json.example   base; activar-hooks.py genera settings.json
+├── datos/
+│   ├── stack.csv         plantilla de decisiones técnicas (todo en TBD)
+│   ├── convenciones.md   estilo del proyecto
+│   └── adr/              decisiones de arquitectura
+├── activar-hooks.py      activa los hooks con el Python de esta máquina
+├── nuevo.py              crea el repo de un sistema, con todo copiado
+├── COMO-CREAR-SISTEMA.md los 6 pasos
+└── INDICE-SISTEMAS.md    qué sistemas hay y dónde está cada repo
+```
+
+## Cómo se arranca un sistema
+
+1. `requisitos` — qué tiene que hacer, criterios de aceptación, alcance
+2. `ux-ui` — cómo se usa; qué pantallas y los 5 estados de cada una
+3. `arquitecto` — stack y estructura, con ADR de lo difícil de revertir
+4. Completar `datos/stack.csv` y `datos/convenciones.md`
+5. Recién ahí, construir
+
+`gestion-entrega` entra en el 1-2 para partir el trabajo y poner rangos de
+estimación. Pedirle un número único es pedirle que invente precisión.
+
+Mientras `stack.csv` diga TBD, los agentes preguntan en vez de asumir. Es
+intencional.
+
+## Ajustar los hooks
+
+Si un hook molesta, editá su script. Si bloquea algo legítimo, agregá la
+excepción — no lo desactives entero.
+
+`verificar.py` detecta el tipo de proyecto solo (package.json, pyproject.toml,
+go.mod, Cargo.toml). Si usás otro stack, agregalo en `comandos_para()`.
+
+## Mantener
+
+Cuando se decida algo que estaba en TBD, actualizá `stack.csv` o
+`convenciones.md`. Un agente con datos viejos da consejos viejos.
+
+## Licencia
+
+MIT © 2026 Alexis Bautista (AleBauty). Ver [LICENSE](LICENSE).

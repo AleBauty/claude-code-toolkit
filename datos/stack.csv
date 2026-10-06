@@ -1,0 +1,24 @@
+area,decision,version,estado,adr,notas
+lenguaje_backend,TBD,,pendiente,,
+framework_backend,TBD,,pendiente,,
+lenguaje_frontend,TBD,,pendiente,,
+framework_frontend,TBD,,pendiente,,
+base_datos,TBD,,pendiente,,
+orm_o_query_builder,TBD,,pendiente,,
+autenticacion,TBD,,pendiente,,
+testing_backend,TBD,,pendiente,,
+testing_frontend,TBD,,pendiente,,
+linter,TBD,,pendiente,,
+formateador,TBD,,pendiente,,
+hosting,TBD,,pendiente,,
+ci_cd,TBD,,pendiente,,
+contenedores,TBD,,pendiente,,
+observabilidad,TBD,,pendiente,,
+movil,TBD,,pendiente,,no aplica si el sistema es solo web
+
+# Una fila por decision. Cuando se decida algo:
+#   - cambiar TBD por la decision y la version
+#   - estado: decidido
+#   - adr: numero del ADR si la decision fue dificil de revertir
+#
+# Los agentes leen este archivo. Si dice TBD, preguntan en vez de asumir.

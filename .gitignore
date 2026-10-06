@@ -29,6 +29,10 @@ target/
 .idea/
 .DS_Store
 Thumbs.db
+# permisos locales de Claude Code: rutas y comandos de esta maquina
+.claude/settings.local.json
+# depende del interprete de cada maquina: se genera con activar-hooks.py
+.claude/settings.json
 
 # logs y temporales
 *.log
