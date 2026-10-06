@@ -5,6 +5,16 @@ agentes, los hooks y la metodologia. El sistema va en su propio repositorio.
 
 ---
 
+## Paso 0 — Si conviene construir
+
+Usar `descubrimiento`. Que problema real hay, cuanto cuesta hoy, que existe
+ya y por que no alcanza. Veredicto: construir, comprar o adoptar, o no hacer
+nada.
+
+Si el veredicto es comprar o no hacer nada, el flujo termina aca.
+Especificar bien algo que convenia comprar es la forma mas prolija de tirar
+el trabajo.
+
 ## Paso 1 — Requisitos antes de elegir stack
 
 Usar `requisitos`. Que tiene que hacer, criterios de aceptacion, alcance.

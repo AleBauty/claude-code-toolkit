@@ -97,6 +97,7 @@ claude-code-toolkit/
 
 ## Cómo se arranca un sistema
 
+0. `descubrimiento` — si conviene construir, comprar algo existente o no hacer nada
 1. `requisitos` — qué tiene que hacer, criterios de aceptación, alcance
 2. `ux-ui` — cómo se usa; qué pantallas y los 5 estados de cada una
 3. `arquitecto` — stack y estructura, con ADR de lo difícil de revertir
