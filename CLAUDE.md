@@ -149,6 +149,19 @@ privadas ni información de clientes.
 - **Si una credencial se filtró: rotarla.** Borrar el commit no arregla nada —
   el historial queda y hay bots escaneando GitHub. Decirlo directo, sin
   suavizarlo.
+- **No llevar la carpeta de trabajo a commits viejos** (`rebase`, `checkout`,
+  `bisect`) desde una sesión de Claude Code. En un commit donde
+  `.claude/hooks/` no existe, Python sale con código 2 al no encontrar el hook,
+  Claude Code lo toma como bloqueo y **todo Bash y PowerShell queda bloqueado**,
+  incluido el comando para deshacerlo. Falla del lado seguro, pero deja la
+  sesión sin salida: hay que correr `git rebase --abort` (o `git checkout main`)
+  en una terminal propia, fuera de Claude Code.
+- **El historial ya subido no se reescribe.** Este repo es público: cualquiera
+  puede haberlo clonado, y un push forzado les rompe la historia sin aviso.
+  Un error en un commit ya subido se corrige con un commit nuevo. Si alguna
+  vez hay que reescribir algo local antes de subirlo, usar
+  `git filter-branch --env-filter` (no hace checkout de la historia), con una
+  rama de respaldo y diff vacío contra ella antes de seguir.
 
 ## Primera vez
 
