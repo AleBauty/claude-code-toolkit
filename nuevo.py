@@ -94,10 +94,13 @@ def main():
         "Si los agentes de la caja mejoraron despues, este repo NO se actualiza\n"
         "solo. Eso es a proposito: un cambio en la caja no deberia cambiar el\n"
         "comportamiento de algo que ya entregaste.\n"
-        "Para traer la version nueva, volver a copiar .claude/agents a mano.\n"
+        "Para traer la version nueva, volver a copiar .claude/agents a mano.\n",
+        encoding="utf-8",
     )
 
-    (destino / "CLAUDE.md").write_text(PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver))
+    (destino / "CLAUDE.md").write_text(
+        PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver), encoding="utf-8"
+    )
 
     # git: .gitignore primero y solo
     try:
