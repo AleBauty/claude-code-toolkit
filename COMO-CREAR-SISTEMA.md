@@ -63,3 +63,6 @@ intencional: un agente que asume stack escribe codigo que hay que tirar.
 
 Agregar la entrada en `INDICE-SISTEMAS.md`, con la ruta del repo y la version
 de la caja de herramientas con la que se creo.
+
+Ese archivo no se versiona: tiene rutas locales y nombres de clientes, y este
+repo es publico. Si no existe, copiarlo de `INDICE-SISTEMAS.example.md`.

@@ -34,6 +34,10 @@ Thumbs.db
 # depende del interprete de cada maquina: se genera con activar-hooks.py
 .claude/settings.json
 
+# indice de sistemas: rutas locales y nombres de clientes, no se versiona
+# la plantilla versionada es INDICE-SISTEMAS.example.md
+INDICE-SISTEMAS.md
+
 # logs y temporales
 *.log
 .cache/

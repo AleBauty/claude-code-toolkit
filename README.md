@@ -91,7 +91,8 @@ claude-code-toolkit/
 ├── activar-hooks.py      activa los hooks con el Python de esta máquina
 ├── nuevo.py              crea el repo de un sistema, con todo copiado
 ├── COMO-CREAR-SISTEMA.md los 6 pasos
-└── INDICE-SISTEMAS.md    qué sistemas hay y dónde está cada repo
+├── INDICE-SISTEMAS.example.md  plantilla del índice
+└── INDICE-SISTEMAS.md    qué sistemas hay y dónde está cada repo (local, no versionado)
 ```
 
 ## Cómo se arranca un sistema

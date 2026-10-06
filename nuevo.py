@@ -31,7 +31,6 @@ COPIAR_DIRS = [".claude/agents", ".claude/hooks"]
 # activar-hooks.py va porque settings.json esta ignorado: quien clone el repo lo regenera
 COPIAR_FILES = ["METODOLOGIA.md", ".gitignore", ".env.example", "activar-hooks.py"]
 
-
 def version_herramientas() -> str:
     """Commit de la caja de herramientas, para saber de que version salio."""
     try:
@@ -131,6 +130,7 @@ def main():
     print("     Tiene que dar exit code 2")
     print("  4. Abrir Claude Code EN ESTA CARPETA y verificar con /agents")
     print(f"  5. Completar el CLAUDE.md y registrar la entrada en {AQUI.name}/INDICE-SISTEMAS.md")
+    print("     (no versionado; si no existe, copiarlo de INDICE-SISTEMAS.example.md)")
 
 
 PLANTILLA_CLAUDE = """# {nombre}
