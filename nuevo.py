@@ -30,6 +30,9 @@ ESTRUCTURA = ["datos", "datos/adr", "src", "tests", "docs"]
 COPIAR_DIRS = [".claude/agents", ".claude/hooks"]
 # activar-hooks.py va porque settings.json esta ignorado: quien clone el repo lo regenera
 COPIAR_FILES = ["METODOLOGIA.md", ".gitignore", ".env.example", "activar-hooks.py"]
+# plantillas que los agentes leen; sin stack.csv no hay TBD que los haga preguntar
+COPIAR_FILES += ["datos/stack.csv", "datos/convenciones.md"]
+
 
 def version_herramientas() -> str:
     """Commit de la caja de herramientas, para saber de que version salio."""
