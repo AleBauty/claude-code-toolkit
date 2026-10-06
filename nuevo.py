@@ -99,7 +99,7 @@ def main():
     )
 
     (destino / "CLAUDE.md").write_text(
-        PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver), encoding="utf-8"
+        PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver, caja=AQUI.name), encoding="utf-8"
     )
 
     # git: .gitignore primero y solo
@@ -137,7 +137,7 @@ PLANTILLA_CLAUDE = """# {nombre}
 
 Sistema. Repo propio.
 
-Creado desde la caja de herramientas `sistemas/` @ {ver}
+Creado desde la caja de herramientas `{caja}/` @ {ver}
 
 ## Que tiene que hacer
 

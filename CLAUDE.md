@@ -1,4 +1,4 @@
-# Sistemas — desarrollo de software
+# claude-code-toolkit — desarrollo de software
 
 **Esta carpeta es la caja de herramientas, no un repo de trabajo.** Acá viven
 los 14 agentes, los hooks y la metodología. Cada sistema va en **su propio

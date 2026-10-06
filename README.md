@@ -1,7 +1,10 @@
-# Sistemas
+# Claude Code Toolkit
 
 Caja de herramientas para construir software. 14 agentes, una metodología y
 tres hooks de verificación automática.
+
+> Proyecto personal, no oficial. No está afiliado a Anthropic ni avalado por
+> Anthropic; "Claude" y "Claude Code" son marcas de Anthropic.
 
 **No es un repo de trabajo.** Cada sistema va en su propio repositorio;
 `nuevo.py` lo crea copiándole los agentes y los hooks.
@@ -67,7 +70,7 @@ un dashboard tire abajo la base de producción.
 ## Estructura
 
 ```
-sistemas/
+claude-code-toolkit/
 ├── CLAUDE.md             contexto y enrutado
 ├── METODOLOGIA.md        reglas de proceso
 ├── SETUP.md              instalación
