@@ -79,6 +79,7 @@ sistemas/
 │   ├── stack.csv         plantilla de decisiones técnicas (todo en TBD)
 │   ├── convenciones.md   estilo del proyecto
 │   └── adr/              decisiones de arquitectura
+├── tests/                red de proteger.py: python3 tests/test_proteger.py
 ├── activar-hooks.py      activa los hooks con el Python de esta máquina
 ├── nuevo.py              crea el repo de un sistema, con todo copiado
 ├── COMO-CREAR-SISTEMA.md los 6 pasos
