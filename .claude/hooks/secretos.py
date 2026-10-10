@@ -2,13 +2,20 @@
 """
 Hook PreToolUse sobre Edit/Write: evita escribir credenciales en archivos.
 
-Heuristica, no garantia: detecta los patrones mas comunes.
+Heurística, no garantía: detecta los patrones más comunes.
 Exit 2 = bloquea.
 
-FALLA CERRADO: si el hook mismo se rompe (JSON invalido, estructura inesperada,
-cualquier excepcion) sale con 2 y el mensaje dice que fallo el hook, no el
+LÍMITE CONOCIDO: solo revisa Edit y Write. Un archivo escrito desde Bash o
+PowerShell (heredoc, `echo >`, `python -c`, `Set-Content`) NO pasa por acá.
+No tiene solución completa con hooks: habría que interpretar cada comando de
+shell para saber si escribe un archivo y qué escribe. Es un límite del
+enfoque, no un bug. La red de fondo es .gitignore (.env) y revisar el diff
+antes de cada commit.
+
+FALLA CERRADO: si el hook mismo se rompe (JSON inválido, estructura inesperada,
+cualquier excepción) sale con 2 y el mensaje dice que falló el hook, no el
 archivo. Un exit 1 Claude Code lo toma como "no bloquear". La contracara: un
-bug que rompe el hook siempre bloquea todo Edit/Write. Como salir de eso esta
+bug que rompe el hook siempre bloquea todo Edit/Write. Cómo salir de eso está
 en SETUP.md ("Si un hook bloquea todo").
 """
 import json

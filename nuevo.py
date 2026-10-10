@@ -172,6 +172,18 @@ descubrimiento -> requisitos -> ux-ui -> arquitecto -> base-datos -> backend/fro
                                                      infraestructura -> documentacion
 ```
 
+## Hooks
+
+Se activan corriendo `activar-hooks.py`, que escribe `.claude/settings.json`
+con el intérprete de Python que funciona en esa máquina. Ese archivo no se
+versiona.
+
+**Al empezar una sesión, verificar que exista `.claude/settings.json`.** Si no
+existe, los hooks no están activos: nada bloquea comandos destructivos ni
+credenciales. Avisarle al usuario y ofrecer correr `activar-hooks.py`. Pasa al
+clonar el repo en otra máquina: `nuevo.py` ya lo genera al crear un repo, pero
+un clon no lo trae porque no se versiona.
+
 ## Git
 
 - Antes de cada commit: mostrarme el diff y esperar aprobacion.

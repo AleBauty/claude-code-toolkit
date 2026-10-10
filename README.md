@@ -42,6 +42,13 @@ corrido.
 Un hook que sale con código 2 **corta la acción** y le devuelve el error a Claude
 para que lo corrija. No es una promesa: es un script.
 
+**Límite conocido de `secretos.py`:** solo revisa Edit y Write. Un archivo
+escrito desde Bash o PowerShell (heredoc, `echo >`, `python -c`,
+`Set-Content`) **no pasa por el hook**. No tiene solución completa con hooks:
+habría que interpretar cada comando de shell para saber si escribe un archivo
+y qué escribe. Es un límite del enfoque, no un bug. La red de fondo es el
+`.gitignore` (`.env`) y revisar el diff antes de cada commit.
+
 ## Los 15 agentes
 
 Pensados como un equipo de desarrollo completo, no como una lista de roles.
