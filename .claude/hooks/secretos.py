@@ -15,8 +15,10 @@ antes de cada commit.
 FALLA CERRADO: si el hook mismo se rompe (JSON inválido, estructura inesperada,
 cualquier excepción) sale con 2 y el mensaje dice que falló el hook, no el
 archivo. Un exit 1 Claude Code lo toma como "no bloquear". La contracara: un
-bug que rompe el hook siempre bloquea todo Edit/Write. Cómo salir de eso está
-en SETUP.md ("Si un hook bloquea todo").
+bug que rompe el hook siempre bloquea todo Edit/Write, y Claude no puede
+arreglarlo porque el hook corre antes que el arreglo. Por eso la salida va en el
+propio mensaje (disableAllHooks en .claude/settings.local.json). Detalle
+completo: SETUP.md del repo claude-code-toolkit.
 """
 import json
 import re
@@ -46,8 +48,9 @@ EJEMPLOS = re.compile(
 
 
 def main():
-    # UTF-8 explicito en las dos puntas, no el default del entorno (en Windows,
-    # cp1252): por que, en SETUP.md, "Codificación de los hooks"
+    # UTF-8 explicito en las dos puntas: Claude Code manda y lee UTF-8. Con el default
+    # del entorno (cp1252 en Windows) el mensaje salia deformado con acentos, y no
+    # romper dependia de surrogateescape. Detalle: SETUP.md del repo claude-code-toolkit.
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     data = json.loads(sys.stdin.buffer.read().decode("utf-8"))  # invalido: fallar_cerrado()
 
@@ -85,8 +88,10 @@ def fallar_cerrado(error: BaseException):
     print(
         f"FALLO EL HOOK secretos.py, no tu archivo: {type(error).__name__}: {error}\n"
         "El archivo no fue evaluado, y por seguridad se bloquea.\n"
-        "Si esto pasa con cualquier Edit/Write, el hook tiene un bug: ver "
-        "'Si un hook bloquea todo' en SETUP.md.",
+        "Si pasa con cualquier Edit/Write, el hook tiene un bug. Para salir: fuera de "
+        "Claude Code, poner {\"disableAllHooks\": true} en .claude/settings.local.json "
+        "(se aplica sin reiniciar), arreglar el hook y despues sacar esa linea. "
+        "Mientras tanto no hay ninguna proteccion.",
         file=sys.stderr,
     )
     sys.exit(2)

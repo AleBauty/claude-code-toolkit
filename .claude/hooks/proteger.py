@@ -13,7 +13,7 @@ DELIBERADO: los patrones se buscan en el texto del comando, sin interpretarlo.
 Un `echo "rm -rf ..."` o un string con "reg delete" adentro tambien se bloquea.
 No es un bug: un hook de este tipo tiene que errar hacia bloquear de mas.
 Parsear el comando para distinguir un string de una ejecucion real abre la
-puerta a evadirlo. tests/test_proteger.py fija este comportamiento.
+puerta a evadirlo. Lo fijan los tests del repo claude-code-toolkit (tests/test_proteger.py).
 
 Exit 2 = bloquea. Exit 0 = deja pasar.
 
@@ -21,7 +21,9 @@ FALLA CERRADO: si el hook mismo se rompe (JSON invalido, estructura inesperada,
 cualquier excepcion) sale con 2 y el mensaje dice que fallo el hook, no el
 comando. Un exit 1 Claude Code lo toma como "no bloquear": un hook de seguridad
 roto dejaria pasar todo. La contracara: un bug que rompe el hook siempre
-bloquea todo. Como salir de eso esta en SETUP.md ("Si un hook bloquea todo").
+bloquea todo, y Claude no puede arreglarlo porque el hook corre antes que el
+arreglo. Por eso la salida va en el propio mensaje (disableAllHooks en
+.claude/settings.local.json). Detalle completo: SETUP.md del repo claude-code-toolkit.
 """
 import json
 import re
@@ -69,8 +71,9 @@ REGLAS = [
 
 
 def main():
-    # UTF-8 explicito en las dos puntas, no el default del entorno (en Windows,
-    # cp1252): por que, en SETUP.md, "Codificación de los hooks"
+    # UTF-8 explicito en las dos puntas: Claude Code manda y lee UTF-8. Con el default
+    # del entorno (cp1252 en Windows) el mensaje salia deformado con acentos, y no
+    # romper dependia de surrogateescape. Detalle: SETUP.md del repo claude-code-toolkit.
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     data = json.loads(sys.stdin.buffer.read().decode("utf-8"))  # invalido: fallar_cerrado()
 
@@ -96,8 +99,10 @@ def fallar_cerrado(error: BaseException):
     print(
         f"FALLO EL HOOK proteger.py, no tu comando: {type(error).__name__}: {error}\n"
         "Tu comando no fue evaluado, y por seguridad se bloquea.\n"
-        "Si esto pasa con cualquier comando, el hook tiene un bug: ver "
-        "'Si un hook bloquea todo' en SETUP.md.",
+        "Si pasa con cualquier comando, el hook tiene un bug. Para salir: fuera de "
+        "Claude Code, poner {\"disableAllHooks\": true} en .claude/settings.local.json "
+        "(se aplica sin reiniciar), arreglar el hook y despues sacar esa linea. "
+        "Mientras tanto no hay ninguna proteccion.",
         file=sys.stderr,
     )
     sys.exit(2)

@@ -84,6 +84,14 @@ def main():
         chequear(c.startswith('python "${CLAUDE_PROJECT_DIR}/'),
                  f"settings generado con la ruta rota: {c}")
 
+    # 2b. los hooks viajan solos a cada repo generado; SETUP.md y tests/ no. Una
+    #     referencia a esos archivos solo vale como puntero al repo de la caja.
+    for hook in sorted((RAIZ / ".claude/hooks").glob("*.py")):
+        for n, linea in enumerate(hook.read_text(encoding="utf-8").splitlines(), 1):
+            if re.search(r"SETUP\.md|tests/test_", linea) and "claude-code-toolkit" not in linea:
+                fallos.append(f"{hook.name}:{n} cita un archivo que no viaja con el hook: "
+                              f"{linea.strip()}")
+
     # 3. ejecucion real desde un subdirectorio y desde una ruta con espacios
     sh = bash()
     interprete = detectar_interprete()

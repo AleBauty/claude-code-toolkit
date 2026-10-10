@@ -131,8 +131,10 @@ ENTRADAS_ROTAS = {
 def falla_cerrado(entrada: str) -> tuple[bool, str]:
     r = subprocess.run([sys.executable, str(HOOK)], input=entrada,
                        capture_output=True, text=True)
+    # la salida tiene que estar en el mensaje: el que queda trabado no puede abrir otro archivo
     ok = (r.returncode == 2 and "proteger.py" in r.stderr
-          and "no fue evaluado" in r.stderr)
+          and "no fue evaluado" in r.stderr
+          and '"disableAllHooks": true' in r.stderr and "settings.local.json" in r.stderr)
     return ok, f"exit={r.returncode} stderr={r.stderr.strip()[:120]!r}"
 
 

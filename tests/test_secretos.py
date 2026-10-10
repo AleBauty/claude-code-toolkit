@@ -85,7 +85,9 @@ def main():
         total += 1
         r = correr(entrada)
         err = r.stderr.decode("utf-8", errors="replace")
-        if not (r.returncode == 2 and "secretos.py" in err and "no fue evaluado" in err):
+        # la salida tiene que estar en el mensaje: el que queda trabado no puede abrir otro archivo
+        if not (r.returncode == 2 and "secretos.py" in err and "no fue evaluado" in err
+                and '"disableAllHooks": true' in err and "settings.local.json" in err):
             fallos += 1
             print(f"FALLA [fallar cerrado] {nombre}: exit={r.returncode} stderr={ascii(err.strip()[:120])}")
 
