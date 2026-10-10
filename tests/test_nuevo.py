@@ -9,6 +9,7 @@ Que cubre:
 - Que cada archivo que nuevo.py dice copiar exista en la caja. Si falta,
   nuevo.py lo saltea en silencio y el repo nace sin el.
 - Que el repo generado tenga .env.example y que .env este ignorado.
+- Que .herramientas-version describa el procedimiento de actualizacion vigente.
 """
 import subprocess
 import sys
@@ -45,6 +46,13 @@ def main():
         chequear((destino / ".env.example").is_file(), "el repo generado no tiene .env.example")
         ignorado = subprocess.run(["git", "check-ignore", "-q", ".env"], cwd=destino)
         chequear(ignorado.returncode == 0, ".env no esta ignorado en el repo generado")
+
+        # .herramientas-version: el procedimiento de actualizacion vigente, no el viejo
+        version = (destino / ".herramientas-version").read_text(encoding="utf-8")
+        chequear("copiar .claude/agents a mano" not in version,
+                 ".herramientas-version tiene el procedimiento viejo (solo agentes)")
+        for debe in ("activar-hooks.py", ".claude/hooks/", "settings.json.example"):
+            chequear(debe in version, f".herramientas-version no menciona {debe}")
 
     for f in fallos:
         print("FALLA", f)

@@ -50,6 +50,26 @@ def version_herramientas() -> str:
     return "sin-git"
 
 
+def texto_version(ver: str) -> str:
+    """Contenido completo de .herramientas-version en el repo de un sistema."""
+    return (
+        f"{AQUI.name} @ {ver}\n\n"
+        "Version de la caja de herramientas con la que se creo o actualizo este repo.\n"
+        "Si la caja mejoro despues, este repo NO se actualiza solo. Es a proposito:\n"
+        "un cambio en la caja no deberia cambiar el comportamiento de algo que ya\n"
+        "entregaste.\n\n"
+        "Para traer la version nueva, desde la caja y con este repo sin cambios\n"
+        "sin commitear:\n"
+        "  1. Copiar .claude/hooks/ (los tres hooks e interprete.py),\n"
+        "     .claude/settings.json.example y activar-hooks.py.\n"
+        "  2. Correr activar-hooks.py en este repo: regenera .claude/settings.json,\n"
+        "     que no se versiona, y prueba que proteger.py bloquee.\n"
+        "  3. Reiniciar Claude Code desde la raiz de este repo: settings.json se lee\n"
+        "     al abrir la sesion.\n"
+        "No se copian datos/, CLAUDE.md ni .gitignore: son de este sistema.\n"
+    )
+
+
 def main():
     if len(sys.argv) != 2:
         print(__doc__)
@@ -92,15 +112,7 @@ def main():
         shutil.copy2(ejemplo, destino / ".claude/settings.json.example")
 
     ver = version_herramientas()
-    (destino / ".herramientas-version").write_text(
-        f"{AQUI.name} @ {ver}\n\n"
-        "Version de la caja de herramientas con la que se creo este repo.\n"
-        "Si los agentes de la caja mejoraron despues, este repo NO se actualiza\n"
-        "solo. Eso es a proposito: un cambio en la caja no deberia cambiar el\n"
-        "comportamiento de algo que ya entregaste.\n"
-        "Para traer la version nueva, volver a copiar .claude/agents a mano.\n",
-        encoding="utf-8",
-    )
+    (destino / ".herramientas-version").write_text(texto_version(ver), encoding="utf-8")
 
     (destino / "CLAUDE.md").write_text(
         PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver, caja=AQUI.name), encoding="utf-8"
