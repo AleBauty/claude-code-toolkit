@@ -35,7 +35,7 @@ corrido.
 
 | Hook | Cuándo | Qué hace |
 |---|---|---|
-| `verificar.py` | después de editar | lint + typecheck, **bloquea** si fallan |
+| `verificar.py` | después de editar | lint + typecheck; si fallan, le devuelve el error a Claude (no bloquea: el archivo ya se escribió) |
 | `proteger.py` | antes de un Bash | **bloquea** `rm -rf`, `DROP TABLE`, `--force`, `curl \| sh` |
 | `secretos.py` | antes de escribir | **bloquea** si detecta API keys, tokens, claves privadas |
 

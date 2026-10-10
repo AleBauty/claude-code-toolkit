@@ -97,7 +97,7 @@ En `.claude/hooks/` hay tres scripts que corren automáticamente:
 
 | Hook | Cuándo | Qué hace |
 |---|---|---|
-| `verificar.py` | después de Edit/Write | corre lint y typecheck; **bloquea** si fallan |
+| `verificar.py` | después de Edit/Write | corre lint y typecheck; si fallan, le devuelve el error a Claude (no bloquea: el archivo ya se escribió) |
 | `proteger.py` | antes de Bash y PowerShell | **bloquea** comandos destructivos |
 | `secretos.py` | antes de Edit/Write | **bloquea** si detecta credenciales |
 
