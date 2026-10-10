@@ -38,14 +38,13 @@ Escribe `.claude/settings.json` con el intérprete que funciona en esta máquina
 archivo no se versiona: depende de cada máquina. Si no encuentra Python, falla
 con un mensaje en vez de dejar hooks muertos.
 
-Probá que funcionan antes de seguir, con el intérprete que informó el script:
+Al terminar, el script prueba solo que `proteger.py` bloquee un comando
+destructivo. Tiene que imprimir `OK: proteger.py bloquea...`. Si imprime
+`FALLA`, el hook no está funcionando: no seguir. Para repetir la prueba,
+volver a correr el script.
 
-```bash
-echo '{"tool_input":{"command":"rm -rf /tmp/prueba"}}' | python3 .claude/hooks/proteger.py
-```
-
-Tiene que imprimir "Comando bloqueado" y salir con código 2. Si sale 0, el hook
-no está funcionando.
+No probarlo a mano con un `echo` que tenga el comando destructivo escrito: el
+propio hook bloquea ese `echo` antes de que corra, y la prueba no prueba nada.
 
 Avisale al usuario que a partir de ahora:
 - los comandos destructivos quedan bloqueados

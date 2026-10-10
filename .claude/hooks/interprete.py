@@ -1,5 +1,6 @@
 """
-Deteccion del interprete de Python para los hooks. No es un hook.
+Deteccion del interprete de Python para los hooks, y prueba de que bloquean.
+No es un hook.
 
 Fuente unica para nuevo.py y activar-hooks.py: si cada uno tuviera su copia,
 se desincronizarian sin que nadie lo note.
@@ -41,6 +42,27 @@ def settings_con_interprete(ejemplo: Path, interprete: str) -> str:
                 if prog in INTERPRETES:
                     hook["command"] = f"{interprete} {resto}"
     return json.dumps(cfg, indent=2, ensure_ascii=False) + "\n"
+
+
+def probar_proteger(raiz: Path, interprete: str) -> tuple[bool, str]:
+    """Le manda a proteger.py un comando destructivo y confirma que bloquea (exit 2).
+
+    El JSON se arma aca y no en una linea de shell: un comando de shell que lo
+    contenga escrito lo bloquea el propio hook antes de que llegue a correr.
+    La ruta es absoluta: no depende del directorio desde donde se llame.
+    """
+    hook = Path(raiz).resolve() / ".claude" / "hooks" / "proteger.py"
+    entrada = json.dumps({"tool_name": "Bash", "tool_input": {"command": "rm -rf /tmp/prueba"}})
+    try:
+        r = subprocess.run([interprete, str(hook)], input=entrada.encode("utf-8"),
+                           capture_output=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return False, f"no se pudo correr {hook}: {e}"
+    if r.returncode == 2:
+        return True, "OK: proteger.py bloquea un comando destructivo (exit 2)."
+    err = r.stderr.decode("utf-8", errors="replace").strip()
+    return False, (f"FALLA: proteger.py no bloqueo un comando destructivo "
+                   f"(exit {r.returncode}, se esperaba 2). {err[:300]}")
 
 
 def error_sin_interprete() -> str:

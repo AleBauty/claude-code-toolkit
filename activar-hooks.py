@@ -16,7 +16,9 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 
 sys.path.insert(0, str(AQUI / ".claude/hooks"))
-from interprete import detectar_interprete, error_sin_interprete, settings_con_interprete  # noqa: E402
+from interprete import (  # noqa: E402
+    detectar_interprete, error_sin_interprete, probar_proteger, settings_con_interprete,
+)
 
 
 def main():
@@ -36,10 +38,13 @@ def main():
 
     print(f"Hooks activados con: {interprete}")
     print(f"Escrito: {destino}")
-    print("\nProba que bloquean de verdad (no asumirlo):")
-    print('  echo \'{"tool_input":{"command":"rm -rf /tmp/prueba"}}\' | '
-          f'{interprete} .claude/hooks/proteger.py')
-    print("Tiene que dar exit code 2.")
+
+    # probar, no asumir: un hook que no bloquea no da error, simplemente deja pasar
+    ok, detalle = probar_proteger(AQUI, interprete)
+    print(f"\n{detalle}")
+    if not ok:
+        sys.exit(1)
+    print("Para repetir la prueba, volver a correr este script.")
 
 
 if __name__ == "__main__":

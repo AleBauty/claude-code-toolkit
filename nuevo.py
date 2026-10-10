@@ -21,7 +21,9 @@ AQUI = Path(__file__).resolve().parent
 
 # deteccion compartida con activar-hooks.py; vive con los hooks y viaja con ellos
 sys.path.insert(0, str(AQUI / ".claude/hooks"))
-from interprete import detectar_interprete, error_sin_interprete, settings_con_interprete  # noqa: E402
+from interprete import (  # noqa: E402
+    detectar_interprete, error_sin_interprete, probar_proteger, settings_con_interprete,
+)
 
 # carpetas de trabajo del repo nuevo
 ESTRUCTURA = ["datos", "datos/adr", "src", "tests", "docs"]
@@ -120,6 +122,8 @@ def main():
     print(f"\nCreado: {destino}")
     print(f"Caja de herramientas: {AQUI.name} @ {ver}")
     print(f"Hooks configurados con: {interprete}")
+    _, detalle = probar_proteger(destino, interprete)   # el paso 3 dice que hacer si falla
+    print(detalle)
     if git_ok:
         print("git iniciado, primer commit = solo el .gitignore")
     print("\nFalta hacer, en este orden:")
@@ -127,10 +131,9 @@ def main():
     print("  2. Verificar que el .gitignore tapa lo que tiene que tapar:")
     print("       git check-ignore -v .env")
     print("     Si no devuelve nada, ese archivo se va a subir")
-    print("  3. Probar que los hooks bloquean de verdad (no asumirlo):")
-    print('       echo \'{"tool_name":"Bash","tool_input":{"command":"rm -rf /"}}\' | '
-          f'{interprete} .claude/hooks/proteger.py')
-    print("     Tiene que dar exit code 2")
+    print("  3. Confirmar que arriba dice 'OK: proteger.py bloquea'. Si dice FALLA, no")
+    print("     seguir: los hooks no protegen. Para repetir la prueba, correr")
+    print("     activar-hooks.py dentro del repo nuevo.")
     print("  4. Abrir Claude Code EN ESTA CARPETA y preguntarle")
     print('     "Que subagentes tenes disponibles?": tienen que aparecer los 15')
     print(f"  5. Completar el CLAUDE.md y registrar la entrada en {AQUI.name}/INDICE-SISTEMAS.md")
