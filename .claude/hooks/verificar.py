@@ -3,12 +3,19 @@
 Hook PostToolUse: corre lint y typecheck despues de cada Edit/Write.
 
 Detecta el tipo de proyecto y usa la herramienta que corresponda.
-Exit 2 = bloquea y le devuelve el error a Claude para que lo corrija.
+
+NO BLOQUEA: corre despues de la herramienta, el archivo ya quedo escrito.
+Exit 2 = le devuelve el error a Claude para que lo corrija.
+Exit 1 = no se pudo verificar (timeout, la herramienta no corrio): Claude Code
+         lo muestra como aviso, sin frenar nada.
 Exit 0 = todo bien.
+
+No es un hook de seguridad: ante un JSON invalido sale con 0.
 
 Configurar en .claude/settings.json (ver settings.json.example).
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -28,7 +35,14 @@ def archivo_editado(data):
     return ti.get("file_path") or ti.get("path") or ""
 
 
+def raiz_del_proyecto(data):
+    """CLAUDE_PROJECT_DIR primero: el cwd de la sesion puede ser un subdirectorio,
+    y desde ahi no se ve package.json ni pyproject.toml."""
+    return Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or Path.cwd())
+
+
 def correr(cmd, cwd):
+    """(codigo, salida). codigo None = no se pudo verificar; salida dice por que."""
     try:
         r = subprocess.run(
             cmd, cwd=cwd, shell=True,
@@ -36,9 +50,9 @@ def correr(cmd, cwd):
         )
         return r.returncode, (r.stdout or "") + (r.stderr or "")
     except subprocess.TimeoutExpired:
-        return 0, ""          # no bloquear por timeout
-    except Exception:
-        return 0, ""
+        return None, f"no termino en {TIMEOUT} s"
+    except Exception as e:
+        return None, f"no se pudo correr: {type(e).__name__}: {e}"
 
 
 def existe(raiz, *nombres):
@@ -93,12 +107,15 @@ def main():
     if not archivo:
         sys.exit(0)
 
-    raiz = Path(data.get("cwd") or Path.cwd())
+    raiz = raiz_del_proyecto(data)
     problemas = []
+    avisos = []
 
     for desc, cmd in comandos_para(raiz, archivo):
         codigo, salida = correr(cmd, raiz)
-        if codigo != 0 and salida.strip():
+        if codigo is None:
+            avisos.append(f"[{desc}] {cmd}: {salida}")
+        elif codigo != 0 and salida.strip():
             problemas.append(f"[{desc}] {cmd}\n{salida.strip()[:3000]}")
 
     if problemas:
@@ -108,7 +125,20 @@ def main():
             + "\n\nCorregir antes de continuar.",
             file=sys.stderr,
         )
-        sys.exit(2)       # bloquea
+        sys.exit(2)       # devuelve el error a Claude
+
+    # verificar.py es un control de CALIDAD, no de seguridad: avisa pero no
+    # bloquea. Sale con 1 porque Claude Code muestra el stderr de un exit 1 como
+    # aviso; con 0 el mensaje no lo ve nadie. proteger.py y secretos.py son
+    # controles de SEGURIDAD y hacen lo contrario: fallan cerrado con 2. No
+    # unificar los dos criterios.
+    if avisos:
+        print(
+            "AVISO: no se pudo verificar " + archivo + " (no bloquea)\n\n"
+            + "\n".join(avisos),
+            file=sys.stderr,
+        )
+        sys.exit(1)       # aviso visible, sin bloquear
 
     sys.exit(0)
 
