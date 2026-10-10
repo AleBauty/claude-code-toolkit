@@ -39,11 +39,19 @@ def chequear(cond: bool, msg: str):
         fallos.append(msg)
 
 
-def correr_main(entrada: dict) -> tuple[int, str]:
+def stdin_de_windows(datos: bytes) -> io.TextIOWrapper:
+    """stdin como lo abre Python en Windows con un pipe: cp1252 + surrogateescape.
+    Claude Code manda UTF-8; el hook tiene que leerlo bien igual."""
+    return io.TextIOWrapper(io.BytesIO(datos), encoding="cp1252", errors="surrogateescape")
+
+
+def correr_main(entrada: dict | bytes) -> tuple[int, str]:
     """Corre verificar.main() con `entrada` como stdin; devuelve (exit, stderr)."""
-    err = io.StringIO()
+    datos = entrada if isinstance(entrada, bytes) else \
+        json.dumps(entrada, ensure_ascii=False).encode("utf-8")
+    err = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")   # como stderr en Windows
     stdin_orig = sys.stdin
-    sys.stdin = io.StringIO(json.dumps(entrada))
+    sys.stdin = stdin_de_windows(datos)
     try:
         with contextlib.redirect_stderr(err):
             verificar.main()
@@ -52,7 +60,8 @@ def correr_main(entrada: dict) -> tuple[int, str]:
         codigo = e.code if isinstance(e.code, int) else 1
     finally:
         sys.stdin = stdin_orig
-    return codigo, err.getvalue()
+    err.flush()
+    return codigo, err.buffer.getvalue().decode(err.encoding, errors="replace")
 
 
 def con_env(valor: str | None):
@@ -92,6 +101,21 @@ def main():
         verificar.comandos_para = lambda raiz, archivo: [("lint", falla)]
         codigo, err = correr_main({"tool_input": {"file_path": "x.py"}, "cwd": "."})
         chequear(codigo == 2 and "E501" in err, f"error de lint: exit={codigo}, esperado 2")
+
+        # --- codificacion: una ruta con acentos llega intacta (UTF-8 explicito) ---
+        sys.stdin, orig = stdin_de_windows(json.dumps(
+            {"tool_input": {"file_path": "docs/ÍNDICE.py"}}, ensure_ascii=False).encode("utf-8")), sys.stdin
+        try:
+            leido = verificar.archivo_editado(verificar.leer_entrada())
+        finally:
+            sys.stdin = orig
+        chequear(leido == "docs/ÍNDICE.py", f"ruta con acentos leida como {leido!a}")
+
+        # --- entrada ilegible: avisa y sale con 1 (no es de seguridad: no bloquea) ---
+        for nombre, datos in (("JSON roto", b"{roto"), ("vacia", b""), ("no UTF-8", b"\xff\xfe")):
+            codigo, err = correr_main(datos)
+            chequear(codigo == 1 and "AVISO" in err and "no se pudo leer" in err,
+                     f"entrada {nombre}: exit={codigo}, stderr={err.strip()[:120]!a}")
 
         # --- todo bien: 0 y en silencio ---
         bien = f'"{sys.executable}" -c "pass"'

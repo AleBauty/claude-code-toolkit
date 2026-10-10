@@ -6,11 +6,11 @@ Detecta el tipo de proyecto y usa la herramienta que corresponda.
 
 NO BLOQUEA: corre despues de la herramienta, el archivo ya quedo escrito.
 Exit 2 = le devuelve el error a Claude para que lo corrija.
-Exit 1 = no se pudo verificar (timeout, la herramienta no corrio): Claude Code
-         lo muestra como aviso, sin frenar nada.
+Exit 1 = no se pudo verificar (entrada ilegible, timeout, la herramienta no
+         corrio): Claude Code lo muestra como aviso, sin frenar nada.
 Exit 0 = todo bien.
 
-No es un hook de seguridad: ante un JSON invalido sale con 0.
+No es un hook de seguridad: nunca falla cerrado, pero tampoco se calla.
 
 Configurar en .claude/settings.json (ver settings.json.example).
 """
@@ -24,10 +24,10 @@ TIMEOUT = 120
 
 
 def leer_entrada():
-    try:
-        return json.load(sys.stdin)
-    except Exception:
-        return {}
+    # UTF-8 explicito: Claude Code manda UTF-8, y con el default del entorno
+    # (cp1252 en Windows) una ruta con acentos llegaba deformada. Si falla, la
+    # excepcion sube: main() avisa, no se calla.
+    return json.loads(sys.stdin.buffer.read().decode("utf-8"))
 
 
 def archivo_editado(data):
@@ -102,8 +102,15 @@ def comandos_para(raiz, archivo):
 
 
 def main():
-    data = leer_entrada()
-    archivo = archivo_editado(data)
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+    try:
+        data = leer_entrada()
+        archivo = archivo_editado(data)
+    except Exception as e:
+        # control de calidad: avisa con 1, no bloquea con 2 (ver el comentario de abajo)
+        print(f"AVISO: verificar.py no se pudo leer la entrada, no se verifico nada: "
+              f"{type(e).__name__}: {e}", file=sys.stderr)
+        sys.exit(1)
     if not archivo:
         sys.exit(0)
 

@@ -81,12 +81,13 @@ stack. Si un ID falla, decile que la busque por nombre; no inventes otro ID.
 ### Paso 4 — Verificación
 
 ```bash
-python .claude/hooks/verificar.py < /dev/null
+echo '{}' | python .claude/hooks/verificar.py
 git status --short
 ls .claude/agents/ | wc -l
 ```
 
-Tienen que aparecer 15 agentes.
+`verificar.py` tiene que salir sin mensaje (exit 0). Tienen que aparecer 15
+agentes.
 
 Probá que leen el contexto. Pedile al usuario que escriba:
 
