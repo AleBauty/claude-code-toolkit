@@ -16,6 +16,12 @@ Parsear el comando para distinguir un string de una ejecucion real abre la
 puerta a evadirlo. tests/test_proteger.py fija este comportamiento.
 
 Exit 2 = bloquea. Exit 0 = deja pasar.
+
+FALLA CERRADO: si el hook mismo se rompe (JSON invalido, estructura inesperada,
+cualquier excepcion) sale con 2 y el mensaje dice que fallo el hook, no el
+comando. Un exit 1 Claude Code lo toma como "no bloquear": un hook de seguridad
+roto dejaria pasar todo. La contracara: un bug que rompe el hook siempre
+bloquea todo. Como salir de eso esta en SETUP.md ("Si un hook bloquea todo").
 """
 import json
 import re
@@ -63,10 +69,7 @@ REGLAS = [
 
 
 def main():
-    try:
-        data = json.load(sys.stdin)
-    except Exception:
-        sys.exit(0)
+    data = json.load(sys.stdin)   # si no es JSON valido, lo agarra fallar_cerrado()
 
     cmd = (data.get("tool_input") or {}).get("command", "")
     if not cmd:
@@ -86,5 +89,21 @@ def main():
     sys.exit(0)
 
 
+def fallar_cerrado(error: BaseException):
+    print(
+        f"FALLO EL HOOK proteger.py, no tu comando: {type(error).__name__}: {error}\n"
+        "Tu comando no fue evaluado, y por seguridad se bloquea.\n"
+        "Si esto pasa con cualquier comando, el hook tiene un bug: ver "
+        "'Si un hook bloquea todo' en SETUP.md.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as e:
+        fallar_cerrado(e)

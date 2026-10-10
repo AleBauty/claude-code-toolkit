@@ -117,3 +117,27 @@ el intérprete que funciona. Después repetir la prueba de bloqueo.
 
 El síntoma de que no andan no es un error: es que **no bloquean nada**. Por eso
 la prueba no es opcional.
+
+### Si un hook bloquea todo
+
+`proteger.py` y `secretos.py` fallan cerrado: si el hook mismo se rompe, bloquea
+en vez de dejar pasar. El mensaje empieza con `FALLO EL HOOK`, y eso quiere
+decir que el problema es el hook, no tu comando ni tu archivo.
+
+Si eso pasa con todo, Claude no puede arreglarlo: el hook corre antes que
+cualquier Bash, PowerShell, Edit o Write, incluidos los que lo arreglarían.
+Hay que salir a mano:
+
+1. Fuera de Claude Code (con el editor), crear o editar
+   `.claude/settings.local.json` y poner:
+
+   ```json
+   { "disableAllHooks": true }
+   ```
+
+   Se aplica en la sesión abierta, sin reiniciar. Usar `settings.local.json`
+   y no `settings.json`: está ignorado por git y `activar-hooks.py` no lo pisa.
+2. Con los hooks apagados, arreglar el script que falla. Mientras tanto
+   **no hay ninguna protección**: nada de comandos destructivos ni credenciales.
+3. Volver a activarlos: sacar `disableAllHooks` (o ponerlo en `false`) y
+   repetir la prueba de bloqueo del paso 1.

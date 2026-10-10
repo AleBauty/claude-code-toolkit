@@ -117,6 +117,24 @@ PERMITIR = {
 }
 
 
+# fallar cerrado: entradas que rompen el hook. Tienen que bloquear (2) y el mensaje
+# tiene que decir que fallo el hook, no el comando: si no, nadie sabe que mirar.
+ENTRADAS_ROTAS = {
+    "JSON mal formado": "{esto no es json",
+    "entrada vacia": "",
+    "raiz que no es objeto": "[1, 2]",
+    "tool_input que no es objeto": '{"tool_input": ["rm", "-rf", "/"]}',
+}
+
+
+def falla_cerrado(entrada: str) -> tuple[bool, str]:
+    r = subprocess.run([sys.executable, str(HOOK)], input=entrada,
+                       capture_output=True, text=True)
+    ok = (r.returncode == 2 and "proteger.py" in r.stderr
+          and "no fue evaluado" in r.stderr)
+    return ok, f"exit={r.returncode} stderr={r.stderr.strip()[:120]!r}"
+
+
 def exit_del_hook(cmd: str) -> int:
     entrada = json.dumps({"tool_name": "PowerShell", "tool_input": {"command": cmd}})
     r = subprocess.run([sys.executable, str(HOOK)], input=entrada,
@@ -138,6 +156,13 @@ def main():
                 if obtenido != esperado:
                     fallos += 1
                     print(f"FALLA [{seccion}] esperado={esperado} obtenido={obtenido}: {cmd}")
+
+    for nombre, entrada in ENTRADAS_ROTAS.items():
+        total += 1
+        ok, detalle = falla_cerrado(entrada)
+        if not ok:
+            fallos += 1
+            print(f"FALLA [fallar cerrado] {nombre}: {detalle}")
 
     resumen = f"\n{total - fallos}/{total} casos pasan"
     print(resumen + (f" - {fallos} FALLAN" if fallos else ""))

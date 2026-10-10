@@ -4,6 +4,12 @@ Hook PreToolUse sobre Edit/Write: evita escribir credenciales en archivos.
 
 Heuristica, no garantia: detecta los patrones mas comunes.
 Exit 2 = bloquea.
+
+FALLA CERRADO: si el hook mismo se rompe (JSON invalido, estructura inesperada,
+cualquier excepcion) sale con 2 y el mensaje dice que fallo el hook, no el
+archivo. Un exit 1 Claude Code lo toma como "no bloquear". La contracara: un
+bug que rompe el hook siempre bloquea todo Edit/Write. Como salir de eso esta
+en SETUP.md ("Si un hook bloquea todo").
 """
 import json
 import re
@@ -33,10 +39,7 @@ EJEMPLOS = re.compile(
 
 
 def main():
-    try:
-        data = json.load(sys.stdin)
-    except Exception:
-        sys.exit(0)
+    data = json.load(sys.stdin)   # si no es JSON valido, lo agarra fallar_cerrado()
 
     ti = data.get("tool_input") or {}
     ruta = ti.get("file_path") or ti.get("path") or ""
@@ -68,5 +71,21 @@ def main():
     sys.exit(0)
 
 
+def fallar_cerrado(error: BaseException):
+    print(
+        f"FALLO EL HOOK secretos.py, no tu archivo: {type(error).__name__}: {error}\n"
+        "El archivo no fue evaluado, y por seguridad se bloquea.\n"
+        "Si esto pasa con cualquier Edit/Write, el hook tiene un bug: ver "
+        "'Si un hook bloquea todo' en SETUP.md.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as e:
+        fallar_cerrado(e)
