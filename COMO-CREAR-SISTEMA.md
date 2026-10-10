@@ -56,7 +56,8 @@ Despues:
 1. Crear el repo remoto y conectarlo.
 2. `git check-ignore -v .env` — si no devuelve nada, ese archivo se sube.
 3. Probar que los hooks bloquean. Exit code 2, no asumirlo.
-4. Abrir Claude Code **en el repo del sistema** y verificar con `/agents`.
+4. Abrir Claude Code **en el repo del sistema** y preguntarle "¿Qué subagentes
+   tenés disponibles?". Tienen que aparecer los 15.
 
 ## Paso 5 — Completar los datos antes de construir
 

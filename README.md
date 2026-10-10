@@ -14,7 +14,8 @@ tres hooks de verificación automática.
 1. Abrir esta carpeta en VS Code.
 2. Abrir Claude Code **desde esta carpeta**.
 3. `Leé SETUP.md y ejecutalo`
-4. Verificar con `/agents` que aparezcan los 15.
+4. Preguntarle a Claude "¿Qué subagentes tenés disponibles?" y verificar que
+   aparezcan los 15.
 
 ## Lo que hace distinto a este espacio
 

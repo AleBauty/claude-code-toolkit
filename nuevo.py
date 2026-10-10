@@ -131,7 +131,8 @@ def main():
     print('       echo \'{"tool_name":"Bash","tool_input":{"command":"rm -rf /"}}\' | '
           f'{interprete} .claude/hooks/proteger.py')
     print("     Tiene que dar exit code 2")
-    print("  4. Abrir Claude Code EN ESTA CARPETA y verificar con /agents")
+    print("  4. Abrir Claude Code EN ESTA CARPETA y preguntarle")
+    print('     "Que subagentes tenes disponibles?": tienen que aparecer los 15')
     print(f"  5. Completar el CLAUDE.md y registrar la entrada en {AQUI.name}/INDICE-SISTEMAS.md")
     print("     (no versionado; si no existe, copiarlo de INDICE-SISTEMAS.example.md)")
 
