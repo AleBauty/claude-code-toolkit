@@ -15,6 +15,7 @@ Que cubre:
   inesperada) bloquea, y el mensaje dice que fallo el hook, no el archivo.
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -48,9 +49,16 @@ ENTRADAS_ROTAS = {
 }
 
 
+# Claude Code manda UTF-8 y lee el mensaje como UTF-8. El hook no puede depender
+# de como viene configurado stdin/stderr (en Windows, cp1252): ver SETUP.md,
+# "Codificación de los hooks". Sin PYTHONUTF8/PYTHONIOENCODING, como un hook real.
+ENV = {k: v for k, v in os.environ.items() if k not in ("PYTHONUTF8", "PYTHONIOENCODING")}
+CON_ACENTOS = "ContraseñaÍNDICE2024"
+
+
 def correr(entrada: str) -> subprocess.CompletedProcess:
     return subprocess.run([sys.executable, str(HOOK)], input=entrada.encode("utf-8"),
-                          capture_output=True)
+                          capture_output=True, env=ENV)
 
 
 def entrada_write(ruta: str, contenido: str) -> str:
@@ -79,7 +87,16 @@ def main():
         err = r.stderr.decode("utf-8", errors="replace")
         if not (r.returncode == 2 and "secretos.py" in err and "no fue evaluado" in err):
             fallos += 1
-            print(f"FALLA [fallar cerrado] {nombre}: exit={r.returncode} stderr={err.strip()[:120]!r}")
+            print(f"FALLA [fallar cerrado] {nombre}: exit={r.returncode} stderr={ascii(err.strip()[:120])}")
+
+    # codificacion: la credencial con acentos se detecta y se muestra sin deformar
+    total += 1
+    r = correr(entrada_write("config.py", 'DB_PASSWORD = "' + CON_ACENTOS + '"'))
+    err = r.stderr.decode("utf-8", errors="replace")
+    if not (r.returncode == 2 and CON_ACENTOS in err):
+        fallos += 1
+        print(f"FALLA [codificacion] exit={r.returncode}, el mensaje no muestra "
+              f"{CON_ACENTOS!r} tal cual: {ascii(err.strip()[:150])}")
 
     print(f"\n{total - fallos}/{total} casos pasan" + (f" - {fallos} FALLAN" if fallos else ""))
     sys.exit(1 if fallos else 0)

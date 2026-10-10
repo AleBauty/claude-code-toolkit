@@ -24,6 +24,7 @@ Al tocar proteger.py: agregar primero el caso aca, verlo fallar, despues el patr
 Vive en tests/ y no en .claude/hooks/ para que nuevo.py no la copie a cada sistema.
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -135,6 +136,21 @@ def falla_cerrado(entrada: str) -> tuple[bool, str]:
     return ok, f"exit={r.returncode} stderr={r.stderr.strip()[:120]!r}"
 
 
+# codificacion: Claude Code manda UTF-8 y lee el mensaje como UTF-8. El hook no
+# puede depender de como viene configurado stdin/stderr (en Windows, cp1252):
+# ver SETUP.md, "Codificación de los hooks". Sin PYTHONUTF8/PYTHONIOENCODING.
+CMD_ACENTOS = "rm -rf /tmp/ÍNDICE_configuración"
+
+
+def muestra_acentos() -> tuple[bool, str]:
+    env = {k: v for k, v in os.environ.items() if k not in ("PYTHONUTF8", "PYTHONIOENCODING")}
+    entrada = json.dumps({"tool_name": "Bash", "tool_input": {"command": CMD_ACENTOS}},
+                         ensure_ascii=False).encode("utf-8")
+    r = subprocess.run([sys.executable, str(HOOK)], input=entrada, capture_output=True, env=env)
+    err = r.stderr.decode("utf-8", errors="replace")
+    return (r.returncode == 2 and CMD_ACENTOS in err), f"exit={r.returncode} stderr={ascii(err.strip()[:120])}"
+
+
 def exit_del_hook(cmd: str) -> int:
     entrada = json.dumps({"tool_name": "PowerShell", "tool_input": {"command": cmd}})
     r = subprocess.run([sys.executable, str(HOOK)], input=entrada,
@@ -163,6 +179,12 @@ def main():
         if not ok:
             fallos += 1
             print(f"FALLA [fallar cerrado] {nombre}: {detalle}")
+
+    total += 1
+    ok, detalle = muestra_acentos()
+    if not ok:
+        fallos += 1
+        print(f"FALLA [codificacion] el mensaje no muestra el comando tal cual: {detalle}")
 
     resumen = f"\n{total - fallos}/{total} casos pasan"
     print(resumen + (f" - {fallos} FALLAN" if fallos else ""))

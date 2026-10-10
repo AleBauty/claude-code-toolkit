@@ -69,7 +69,10 @@ REGLAS = [
 
 
 def main():
-    data = json.load(sys.stdin)   # si no es JSON valido, lo agarra fallar_cerrado()
+    # UTF-8 explicito en las dos puntas, no el default del entorno (en Windows,
+    # cp1252): por que, en SETUP.md, "Codificación de los hooks"
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+    data = json.loads(sys.stdin.buffer.read().decode("utf-8"))  # invalido: fallar_cerrado()
 
     cmd = (data.get("tool_input") or {}).get("command", "")
     if not cmd:

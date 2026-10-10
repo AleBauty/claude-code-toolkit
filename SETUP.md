@@ -141,3 +141,41 @@ Hay que salir a mano:
    **no hay ninguna protección**: nada de comandos destructivos ni credenciales.
 3. Volver a activarlos: sacar `disableAllHooks` (o ponerlo en `false`) y
    repetir la prueba de bloqueo del paso 1.
+
+### Codificación de los hooks
+
+`proteger.py` y `secretos.py` leen stdin como bytes y los decodifican como
+UTF-8, y escriben stderr en UTF-8. Son dos líneas al principio de `main()`.
+Esto explica por qué están ahí.
+
+**Qué se sospechó.** Claude Code les manda el JSON en UTF-8, pero
+`json.load(sys.stdin)` decodifica con la codificación del entorno, que en
+Windows es `cp1252`. La sospecha era que un archivo con "Í" o "Á" (bytes que
+`cp1252` no tiene definidos) rompería la lectura, caería en el `except` y el
+hook saldría con 0: `secretos.py` dejaría pasar cualquier credencial que
+estuviera en un archivo con un "ÍNDICE" adentro.
+
+**Qué se probó.** Se le mandó a `secretos.py` una credencial junto con "ÍNDICE"
+y con "Á", y a `proteger.py` un `rm -rf` sobre una ruta con acentos. Las dos
+versiones de los hooks (la de antes y la de después de fallar cerrado)
+**bloquearon siempre**. La sospecha **no se reprodujo**.
+
+**Por qué no.** En esa máquina, Python abre stdin en `cp1252` pero con
+`errors=surrogateescape`: los bytes que no puede decodificar no lanzan
+excepción, se convierten en caracteres sustitutos (`Í` llega como
+`\xc3\udc8d`). No hay excepción, entonces no se llega al `except`, y la
+credencial, que es ASCII, llega intacta a las regex.
+
+**Por qué igual se cambió.**
+
+1. **La protección dependía de un default del entorno, no del código.** Con
+   otra configuración de stdin (`errors=strict`) la excepción sí ocurre. Leer
+   bytes y decodificar UTF-8 hace que funcione por diseño.
+2. **El mensaje salía deformado**, y eso sí se reproducía: una credencial con
+   "ÍNDICE" se mostraba como `�\udc8dNDICE`, porque además stderr salía en
+   `cp1252`. En un proyecto en español, va a pasar.
+
+Si llega algo que no es UTF-8 válido, la decodificación falla y el hook falla
+cerrado. `tests/test_proteger.py` y `tests/test_secretos.py` lo cubren con
+casos de acentos y sin `PYTHONUTF8` ni `PYTHONIOENCODING`, como corre un hook
+real.
