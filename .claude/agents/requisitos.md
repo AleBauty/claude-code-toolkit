@@ -73,3 +73,27 @@ después: rendimiento, seguridad, usabilidad, mantenibilidad, compatibilidad.
 - Si dos requisitos se contradicen, decilo.
 - Si algo es técnicamente caro y el usuario no lo sabe, avisalo antes de que se
   comprometa.
+
+## Traspaso
+
+<!-- traspaso:inicio -->
+Tu salida completa va a un archivo, no al chat. El orquestador no la resume:
+le pasa al siguiente agente la ruta, y el siguiente lee el archivo.
+
+1. Escribí todo lo que encontraste en `docs/<tu-nombre>/<AAAA-MM-DD>-<tema>.md`
+   (por ejemplo `docs/revisor/2026-10-11-login.md`). Un directorio por agente:
+   dos agentes en paralelo no se pisan. Si el archivo ya existe, agregá `-2`,
+   `-3`: nunca pises uno anterior.
+2. Incluí también lo que probaste y no sirvió, y por qué. Eso no queda en
+   ningún otro lado.
+3. Devolvé al orquestador solo esto:
+
+       Detalle: docs/<tu-nombre>/<archivo>.md
+       Conteo: <n> críticos, <n> altos, <n> medios, <n> bajos
+       Más grave: <una línea por cada crítico o alto, máximo 3>
+
+   Si tu trabajo no se mide por severidad, el conteo va por tipo
+   (por ejemplo: 9 historias, 4 preguntas abiertas que bloquean).
+4. Si te pasan una ruta de otro agente, leé el archivo completo. No trabajes
+   sobre un resumen.
+<!-- traspaso:fin -->

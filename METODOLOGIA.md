@@ -107,3 +107,59 @@ momento pisa esta regla.
 - Dependencias: revisar que no tengan vulnerabilidades conocidas antes de sumarlas.
 
 Agregar seguridad al final cuesta diez veces más que hacerlo bien desde el inicio.
+
+## 11. Traspaso entre agentes
+
+Un agente encuentra 14 cosas con detalle; si el orquestador lo resume para
+pasárselo al siguiente, el detalle se pierde. Y lo que se intentó y no sirvió
+vive solo en el chat: cuando la sesión se cierra, desaparece. Por eso los
+agentes que producen análisis dejan su salida en un archivo y devuelven un
+puntero. Esta es la regla, y va copiada tal cual en cada uno de esos agentes
+(`tests/test_traspaso.py` del repo claude-code-toolkit vigila que no se
+desincronice):
+
+<!-- traspaso:inicio -->
+Tu salida completa va a un archivo, no al chat. El orquestador no la resume:
+le pasa al siguiente agente la ruta, y el siguiente lee el archivo.
+
+1. Escribí todo lo que encontraste en `docs/<tu-nombre>/<AAAA-MM-DD>-<tema>.md`
+   (por ejemplo `docs/revisor/2026-10-11-login.md`). Un directorio por agente:
+   dos agentes en paralelo no se pisan. Si el archivo ya existe, agregá `-2`,
+   `-3`: nunca pises uno anterior.
+2. Incluí también lo que probaste y no sirvió, y por qué. Eso no queda en
+   ningún otro lado.
+3. Devolvé al orquestador solo esto:
+
+       Detalle: docs/<tu-nombre>/<archivo>.md
+       Conteo: <n> críticos, <n> altos, <n> medios, <n> bajos
+       Más grave: <una línea por cada crítico o alto, máximo 3>
+
+   Si tu trabajo no se mide por severidad, el conteo va por tipo
+   (por ejemplo: 9 historias, 4 preguntas abiertas que bloquean).
+4. Si te pasan una ruta de otro agente, leé el archivo completo. No trabajes
+   sobre un resumen.
+<!-- traspaso:fin -->
+
+**El orquestador** (la sesión principal, que no es un agente) al delegar pasa
+rutas, no resúmenes. Lo que le muestra al usuario sale del puntero: el conteo
+y lo más grave, con la ruta para ver el resto.
+
+**Quiénes la llevan:** `revisor`, `seguridad`, `qa`, `requisitos`, `ux-ui`,
+`arquitecto`, `gestion-entrega`, `descubrimiento` y `datos-analitica`. Producen
+análisis que otro agente consume. Los ADR de `arquitecto` siguen en
+`datos/adr/`: el archivo de traspaso es el análisis, el ADR es la decisión.
+
+**Quiénes no:** `backend`, `frontend`, `mobile`, `base-datos`,
+`infraestructura` y `documentacion`. Su producto ya es un archivo del repo
+(código, migraciones, configuración, documentos) y lo que devuelven es corto.
+
+**Alcance de escritura.** `revisor` y `seguridad` tienen Write solo para dejar
+su salida en `docs/<su-nombre>/`. El hook `alcance.py` bloquea cualquier Edit o
+Write suyo fuera de esa carpeta: el revisor no escribe lo que revisa. Límite
+conocido: también tienen Bash y podrían escribir por ahí. No se cierra a
+propósito: el riesgo real es editar código por error, y para eso se usa Write;
+cerrar Bash rompería los greps y los tests que necesitan.
+
+No escriben por Bash (heredoc) en lugar de Write: `secretos.py` corre en
+Edit|Write y no en Bash, así que eso esquivaría el único hook que impide
+filtrar una credencial, justo en el agente que cita las que encontró.
