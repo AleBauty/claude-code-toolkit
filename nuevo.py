@@ -75,6 +75,8 @@ def problemas_del_resultado(destino: Path) -> list[str]:
     if copiados == 0 or copiados != esperados:   # 0 == 0 no es un exito
         problemas.append(f"se copiaron {copiados} agentes de {esperados}")
     problemas += [f"falta {h}" for h in hooks_requeridos() if not (destino / h).is_file()]
+    if not (destino / "BITACORA.md").is_file():
+        problemas.append("no se escribio BITACORA.md")
     return problemas
 
 
@@ -163,6 +165,8 @@ def main():
               "       va a decir 'sin-git' y no se va a saber de que version salio el repo.")
     (destino / ".herramientas-version").write_text(texto_version(ver), encoding="utf-8")
 
+    (destino / "BITACORA.md").write_text(plantilla_bitacora(nombre), encoding="utf-8")
+
     (destino / "CLAUDE.md").write_text(
         PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver, caja=AQUI.name,
                                 parrafo_hooks=PARRAFO_HOOKS), encoding="utf-8"
@@ -212,6 +216,35 @@ def main():
     print('     "Que subagentes tenes disponibles?": tienen que aparecer los 15')
     print(f"  5. Completar el CLAUDE.md y registrar la entrada en {AQUI.name}/INDICE-SISTEMAS.md")
     print("     (no versionado; si no existe, copiarlo de INDICE-SISTEMAS.example.md)")
+
+
+# BITACORA.md del repo nuevo (METODOLOGIA.md §12). Calcada de la que stocky
+# escribio a mano antes de que existiera esta plantilla: mismos titulos (sin
+# tilde) y mismo formato de lineas, para que esa ya sea compatible tal cual.
+# estado.py lee solo "## Estado actual"; los comentarios no se inyectan.
+PLANTILLA_BITACORA = """\
+# Bitacora — {nombre}
+
+## Estado actual
+
+<!-- 3 a 6 lineas. Se REESCRIBE, no se acumula: etapa, que esta bloqueado y
+     esperando que. Es lo unico que se lee en cada sesion. -->
+- Etapa: repo recien creado. Siguiente: `descubrimiento`.
+
+## Decisiones cerradas
+
+<!-- Una linea por decision: "- AAAA-MM-DD — decision". Solo lo que no se
+     vuelve a discutir. -->
+
+## Historico
+
+<!-- Append-only, lo nuevo arriba. "### AAAA-MM-DD — tema": que se hizo, y
+     "  - No sirvio: ... (por que)". Se lee solo cuando se pregunta por algo viejo. -->
+"""
+
+
+def plantilla_bitacora(nombre: str) -> str:
+    return PLANTILLA_BITACORA.format(nombre=nombre)
 
 
 # va en la plantilla y actualizar.py lo imprime para pegar a mano: una sola fuente

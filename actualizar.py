@@ -13,8 +13,9 @@ El criterio es por DUENO, no por archivo:
   un agente nuevo viaja sin tocar este script.
 - Lo que es DEL REPO no se toca nunca: CLAUDE.md, datos/, .gitignore, src/,
   tests/, docs/ (y todo lo que no sea de la caja).
-- .env.example se crea si falta y no se pisa nunca: el repo le agrega sus
-  propias variables.
+- .env.example y BITACORA.md se crean si faltan y no se pisan nunca: el repo
+  les agrega lo suyo (variables, estado, decisiones). La bitacora se genera con
+  la plantilla de nuevo.py y el nombre del repo.
 - Un agente del repo que la caja no tiene (propio, o borrado de la caja) no se
   toca, pero el plan lo informa.
 
@@ -43,9 +44,19 @@ AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 sys.path.insert(0, str(AQUI / ".claude/hooks"))
 from interprete import detectar_interprete, error_sin_interprete  # noqa: E402
-from nuevo import PARRAFO_HOOKS, texto_version, version_herramientas  # noqa: E402
+from nuevo import PARRAFO_HOOKS, plantilla_bitacora, texto_version, version_herramientas  # noqa: E402
 
-CREAR_SI_FALTA = [".env.example"]
+
+def _copia_de_la_caja(nombre: str):
+    return lambda destino: (AQUI / nombre).read_bytes() if (AQUI / nombre).is_file() else None
+
+
+# Se crean si faltan y no se pisan NUNCA: el repo les agrega lo suyo.
+# Cada uno dice de donde sale su contenido; None = la caja no lo puede ofrecer.
+CREAR_SI_FALTA = {
+    ".env.example": _copia_de_la_caja(".env.example"),
+    "BITACORA.md": lambda destino: plantilla_bitacora(destino.name).encode("utf-8"),
+}
 DEL_REPO = ["CLAUDE.md", "datos/", ".gitignore", "src/", "tests/", "docs/"]
 
 
@@ -102,11 +113,13 @@ def armar_plan(destino: Path) -> dict:
             plan["sobrescribe"].append(f)
         else:
             plan["iguales"].append(f)
-    for f in CREAR_SI_FALTA:
-        if not (AQUI / f).is_file():
+    for f, contenido in CREAR_SI_FALTA.items():
+        if (destino / f).is_file():
+            plan["respeta"].append(f)
+        elif contenido(destino) is None:
             plan["avisos"].append(f"la caja no tiene {f}: no se puede ofrecer al repo")
-            continue
-        (plan["respeta"] if (destino / f).is_file() else plan["crea"]).append(f)
+        else:
+            plan["crea"].append(f)
     # agentes que la caja no tiene: propios del repo o borrados de la caja. No se
     # tocan (podrian ser propios), pero se informan: no actuar no es callarse.
     for p in sorted((destino / ".claude/agents").glob("*.md")):
@@ -153,7 +166,10 @@ def mostrar_plan(destino: Path, plan: dict, ver: str):
 def aplicar(destino: Path, plan: dict, ver: str) -> str:
     for f in plan["sobrescribe"] + plan["crea"]:
         (destino / f).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(AQUI / f, destino / f)
+        if f in CREAR_SI_FALTA:
+            (destino / f).write_bytes(CREAR_SI_FALTA[f](destino))
+        else:
+            shutil.copy2(AQUI / f, destino / f)
     print(f"Copiados: {len(plan['sobrescribe']) + len(plan['crea'])} archivos.")
 
     interprete = detectar_interprete()

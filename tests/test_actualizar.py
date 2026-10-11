@@ -92,6 +92,9 @@ def repo_viejo(tmp: Path) -> Path:
     (repo / ".gitignore").write_text(
         (repo / ".gitignore").read_text(encoding="utf-8") + "\n# propia\nsalida/\n", encoding="utf-8")
 
+    # un repo de antes de la bitacora: no la tiene (actualizar.py la tiene que crear)
+    (repo / "BITACORA.md").unlink(missing_ok=True)
+
     # un agente que la caja no tiene (propio del repo, o borrado de la caja)
     (repo / ".claude/agents/propio-del-repo.md").write_text("# agente propio\n", encoding="utf-8")
 
@@ -167,6 +170,10 @@ def main():
         chequear(len(info) == 2 and "propio-del-repo.md" in info[1].split("\n\n", 1)[0],
                  f"el plan no informa el agente que no esta en la caja: {plan[-500:]!a}")
 
+        # 2c. BITACORA.md falta: se ofrece crearla
+        crea = plan.split("Se crea", 1)[-1].split("No se tocan", 1)[0]
+        chequear("BITACORA.md" in crea, f"el plan no ofrece crear BITACORA.md: {crea!a}")
+
         # 3. CRLF: METODOLOGIA.md es igual, no se lista como cambio
         seccion = plan.split("Se sobrescribe", 1)[-1].split("No se tocan", 1)[0]
         chequear("METODOLOGIA.md" not in seccion,
@@ -188,6 +195,11 @@ def main():
         # del repo: intacto
         for f, contenido in del_repo.items():
             chequear((repo / f).read_bytes() == contenido, f"{f} es del repo y fue modificado")
+
+        # BITACORA.md creada con el nombre del repo
+        bit = repo / "BITACORA.md"
+        chequear(bit.is_file() and bit.read_text(encoding="utf-8").startswith(f"# Bitacora — {repo.name}"),
+                 "BITACORA.md no se creo con el nombre del repo")
 
         # settings.json regenerado
         cfg = (repo / ".claude/settings.json").read_text(encoding="utf-8")
@@ -236,6 +248,14 @@ def main():
         r = actualizar(repo, "n\n")
         seccion = r.stdout.split("Se sobrescribe", 1)[-1].split("No se tocan", 1)[0]
         chequear("proteger.py" not in seccion, "una segunda corrida vuelve a listar proteger.py")
+
+        # 7. una BITACORA.md con contenido propio no se pisa nunca
+        propia = "# Bitacora — mia\n\n## Estado actual\n\n- algo propio\n"
+        bit.write_text(propia, encoding="utf-8")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-q", "-m", "bitacora propia")
+        r = actualizar(repo, "s\n")
+        chequear(bit.read_text(encoding="utf-8") == propia, "actualizar.py piso una BITACORA.md existente")
 
     for f in fallos:
         print("FALLA", f)

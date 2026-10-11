@@ -96,6 +96,7 @@ def main():
         "alcance.py ausente": ("alcance.py", None, False),
         "alcance.py roto": ("alcance.py", NO_HACE_NADA, False),
         "verificar.py roto": ("verificar.py", NO_HACE_NADA, True),
+        "estado.py roto": ("estado.py", NO_HACE_NADA, True),
     }
     for nombre, (hook, contenido, escribe) in casos.items():
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
@@ -119,7 +120,8 @@ def main():
         caja = copia_de_la_caja(tmp)
         r = activar(caja, cwd=tmp)
         salida = r.stdout + r.stderr
-        for ok in ("OK: proteger.py bloquea", "OK: secretos.py bloquea", "OK: verificar.py"):
+        for ok in ("OK: proteger.py bloquea", "OK: secretos.py bloquea", "OK: alcance.py",
+                   "OK: verificar.py", "OK: estado.py"):
             chequear(ok in salida, f"no informa '{ok}': {salida[-300:]!a}")
 
         # 4. nuevo.py tampoco imprime el comando roto

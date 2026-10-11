@@ -53,7 +53,7 @@ _CREDENCIAL_DE_PRUEBA = "sk-" + "pRu3bA" + "dEl0sH00ks" + "N0eSr3aL"
 _LINEA_CON_CREDENCIAL = "API_KEY = " + '"' + _CREDENCIAL_DE_PRUEBA + '"'
 
 # Cada prueba: hook, entrada (funcion del proyecto de prueba), exit esperado,
-# marca en stderr, que prueba, y si es de seguridad.
+# marca (en stderr, o en stdout para estado.py), que prueba, y si es de seguridad.
 # La marca es lo que distingue al hook de verdad: sin el archivo, Python tambien
 # sale con 2 ("can't open file"), y un exit 2 solo pasaria por un bloqueo.
 # El JSON se arma aca y no en una linea de shell: un comando de shell que lo
@@ -75,7 +75,13 @@ PRUEBAS = [
     # arranque y avise ante una entrada ilegible (bloque D)
     ("verificar.py", lambda p: "{entrada rota",
      1, "AVISO", "arranca y avisa ante una entrada ilegible", False),
+    # calidad: el proyecto de prueba tiene una BITACORA.md con esta marca en el
+    # Estado actual; estado.py tiene que imprimirla (es lo que Claude ve)
+    ("estado.py", lambda p: json.dumps({"hook_event_name": "SessionStart", "source": "startup"}),
+     0, "MARCA-ESTADO-DE-PRUEBA", "inyecta el Estado actual de la bitacora", False),
 ]
+
+_BITACORA_DE_PRUEBA = "# Bitacora — prueba\n\n## Estado actual\n\n- MARCA-ESTADO-DE-PRUEBA\n"
 
 
 def probar_hooks(raiz: Path, interprete: str) -> tuple[bool, list[str]]:
@@ -90,6 +96,7 @@ def probar_hooks(raiz: Path, interprete: str) -> tuple[bool, list[str]]:
     seguridad_ok, lineas = True, []
     with tempfile.TemporaryDirectory(prefix="prueba-hooks-") as tmp:
         proyecto = Path(tmp)
+        (proyecto / "BITACORA.md").write_text(_BITACORA_DE_PRUEBA, encoding="utf-8")
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(proyecto)}
         for hook, entrada, esperado, marca, que, de_seguridad in PRUEBAS:
             ok, linea = _probar_uno(Path(raiz).resolve() / ".claude" / "hooks" / hook, interprete,
@@ -109,9 +116,11 @@ def _probar_uno(ruta: Path, interprete: str, entrada: str, env: dict,
         r = subprocess.run([interprete, str(ruta)], input=entrada.encode("utf-8"),
                            capture_output=True, timeout=30, cwd=env["CLAUDE_PROJECT_DIR"], env=env)
         codigo, err = r.returncode, r.stderr.decode("utf-8", errors="replace").strip()
+        salida = r.stdout.decode("utf-8", errors="replace")
     except (OSError, subprocess.TimeoutExpired) as e:
-        codigo, err = None, f"no se pudo correr: {e}"
-    if codigo == esperado and marca in err:
+        codigo, err, salida = None, f"no se pudo correr: {e}", ""
+    # la marca va en stderr (bloqueos, avisos) o en stdout (lo que inyecta estado.py)
+    if codigo == esperado and (marca in err or marca in salida):
         return True, f"OK: {que} (exit {codigo})."
     return False, (f"{que}: exit {codigo}, se esperaba {esperado} con '{marca}'. {err[:200]}")
 

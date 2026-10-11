@@ -163,3 +163,34 @@ cerrar Bash rompería los greps y los tests que necesitan.
 No escriben por Bash (heredoc) en lugar de Write: `secretos.py` corre en
 Edit|Write y no en Bash, así que eso esquivaría el único hook que impide
 filtrar una credencial, justo en el agente que cita las que encontró.
+
+## 12. Bitácora
+
+Cada repo de trabajo tiene un `BITACORA.md` en la raíz (lo crea `nuevo.py`; a
+los repos anteriores se lo agrega `actualizar.py`, sin pisar uno que ya
+exista). El `git log` dice qué quedó; nada más dice qué se probó y se descartó,
+ni en qué quedó el trabajo. Para eso es la bitácora. Tres secciones:
+
+- **Estado actual** — 3 a 6 líneas. Se **reescribe**, no se acumula: en qué
+  etapa está, qué está bloqueado y esperando qué.
+- **Decisiones cerradas** — una línea por decisión, con fecha
+  (`- AAAA-MM-DD — decisión`). Solo lo que no se vuelve a discutir.
+- **Historico** — append-only, lo nuevo arriba (`### AAAA-MM-DD — tema`). Qué
+  se hizo, qué se intentó y **no sirvió, y por qué**.
+
+**Qué se lee y cuándo.** Solo el Estado actual se lee siempre: el hook
+`estado.py` lo inyecta al abrir la sesión (y al retomarla, después de `/clear`
+y después de compactar). El Histórico se lee cuando alguien pregunta por algo
+viejo. Si se leyera entero en cada sesión, la bitácora sería un impuesto fijo
+de contexto. Por lo mismo, si el Estado actual pasa de 1500 caracteres,
+`estado.py` lo corta y avisa: hay que reescribirlo, no dejarlo crecer.
+
+**Quién la escribe.** El orquestador, al cerrar un tramo de trabajo:
+reescribe el Estado actual, agrega las decisiones que se cerraron y anota en el
+Histórico lo que se hizo y lo que no sirvió. Los agentes no la tocan: su
+detalle va en `docs/<agente>/` (§11), y la bitácora apunta ahí.
+
+**No se automatiza la escritura.** Un hook no puede saber el por qué ni el "no
+sirvió", y lo mecánico (commits, archivos tocados) ya está en git. Por qué se
+descartó un hook que la escribiera: ADR-001 en `datos/adr/` del repo
+claude-code-toolkit.

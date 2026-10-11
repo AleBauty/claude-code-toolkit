@@ -124,6 +124,20 @@ def main():
 
         chequear((destino / ".env.example").is_file(), "el repo generado no tiene .env.example")
         chequear((destino / ".claude/settings.json").is_file(), "el repo generado no tiene settings.json")
+        # BITACORA.md: la plantilla, calcada de la de stocky
+        bit = destino / "BITACORA.md"
+        chequear(bit.is_file(), "el repo generado no tiene BITACORA.md")
+        if bit.is_file():
+            texto = bit.read_text(encoding="utf-8")
+            titulos = [l for l in texto.splitlines() if l.startswith("#")]
+            chequear(titulos == ["# Bitacora — sistema_prueba", "## Estado actual",
+                                 "## Decisiones cerradas", "## Historico"],
+                     f"BITACORA.md con otros titulos: {titulos!a}")
+            r = subprocess.run([sys.executable, str(destino / ".claude/hooks/estado.py")],
+                               input=b"{}", capture_output=True,
+                               env={**__import__("os").environ, "CLAUDE_PROJECT_DIR": str(destino)})
+            chequear(r.returncode == 0 and b"Etapa" in r.stdout,
+                     f"estado.py no lee la bitacora recien creada: {r.stdout[-200:]!a}")
         agentes = len(list((destino / ".claude/agents").glob("*.md")))
         chequear(agentes == 15, f"el repo generado tiene {agentes} agentes, no 15")
         ignorado = subprocess.run(["git", "check-ignore", "-q", ".env"], cwd=destino)
