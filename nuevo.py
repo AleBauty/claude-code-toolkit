@@ -12,6 +12,7 @@ Uso:
 Ejemplo:
     python3 nuevo.py ~/repos/sistema_acme
 """
+import re
 import shutil
 import subprocess
 import sys
@@ -21,9 +22,13 @@ AQUI = Path(__file__).resolve().parent
 
 # deteccion compartida con activar-hooks.py; vive con los hooks y viaja con ellos
 sys.path.insert(0, str(AQUI / ".claude/hooks"))
-from interprete import (  # noqa: E402
-    detectar_interprete, error_sin_interprete, probar_proteger, settings_con_interprete,
-)
+try:
+    from interprete import (  # noqa: E402
+        detectar_interprete, error_sin_interprete, probar_proteger, settings_con_interprete,
+    )
+except ImportError as e:
+    print(f"ERROR: falta .claude/hooks/interprete.py en la caja ({e}). No creo nada.")
+    sys.exit(1)
 
 # carpetas de trabajo del repo nuevo
 ESTRUCTURA = ["datos", "datos/adr", "src", "tests", "docs"]
@@ -34,6 +39,43 @@ COPIAR_DIRS = [".claude/agents", ".claude/hooks"]
 COPIAR_FILES = ["METODOLOGIA.md", ".gitignore", ".env.example", "activar-hooks.py"]
 # plantillas que los agentes leen; sin stack.csv no hay TBD que los haga preguntar
 COPIAR_FILES += ["datos/stack.csv", "datos/convenciones.md"]
+# de aca sale settings.json: sin el, el repo nace sin hooks
+EJEMPLO_SETTINGS = ".claude/settings.json.example"
+
+
+def hooks_requeridos() -> list[str]:
+    """interprete.py mas cada hook que settings.json.example manda a correr."""
+    ejemplo = AQUI / EJEMPLO_SETTINGS
+    usados = re.findall(r"\.claude/hooks/(\w+\.py)", ejemplo.read_text(encoding="utf-8")) \
+        if ejemplo.is_file() else []
+    return [f".claude/hooks/{h}" for h in ["interprete.py", *dict.fromkeys(usados)]]
+
+
+def fuentes_faltantes() -> list[str]:
+    """Todo lo que se va a copiar y no esta. Se revisa ANTES de crear nada: un
+    repo a medio armar es peor que ningun repo.
+
+    "La carpeta tiene algo" no alcanza: __pycache__ cuenta como algo. Se valida
+    que tenga lo que se espera: al menos un agente .md, y cada hook que usa
+    settings.json.example."""
+    faltan = [f for f in COPIAR_FILES + [EJEMPLO_SETTINGS] if not (AQUI / f).is_file()]
+    if not list((AQUI / ".claude/agents").glob("*.md")):
+        faltan.append(".claude/agents (ningun agente .md)")
+    faltan += [h for h in hooks_requeridos() if not (AQUI / h).is_file()]
+    return faltan
+
+
+def problemas_del_resultado(destino: Path) -> list[str]:
+    """Verifica lo que nuevo.py afirma al terminar, en vez de darlo por hecho."""
+    problemas = []
+    if not (destino / ".claude/settings.json").is_file():
+        problemas.append("no se escribio .claude/settings.json: el repo no tiene hooks")
+    esperados = len(list((AQUI / ".claude/agents").glob("*.md")))
+    copiados = len(list((destino / ".claude/agents").glob("*.md")))
+    if copiados == 0 or copiados != esperados:   # 0 == 0 no es un exito
+        problemas.append(f"se copiaron {copiados} agentes de {esperados}")
+    problemas += [f"falta {h}" for h in hooks_requeridos() if not (destino / h).is_file()]
+    return problemas
 
 
 def version_herramientas() -> str:
@@ -82,6 +124,15 @@ def main():
         print("No voy a escribir encima. Elegi otra ruta o vaciala vos.")
         sys.exit(1)
 
+    # antes de crear nada: lo que falta en la caja se saltearia en silencio
+    faltan = fuentes_faltantes()
+    if faltan:
+        print("ERROR: a la caja le falta lo que hay que copiar:")
+        for f in faltan:
+            print(f"  {f}")
+        print("No creo el repo: naceria incompleto y nada lo avisaria.")
+        sys.exit(1)
+
     # antes de crear nada: sin interprete los hooks quedan muertos y no bloquean
     interprete = detectar_interprete()
     if interprete is None:
@@ -92,25 +143,24 @@ def main():
     for sub in ESTRUCTURA:
         (destino / sub).mkdir(parents=True, exist_ok=True)
 
+    # sin "if existe": ya se valido. Si algo falla aca, que se vea.
     for d in COPIAR_DIRS:
-        origen = AQUI / d
-        if origen.is_dir():
-            shutil.copytree(origen, destino / d, dirs_exist_ok=True)
-
+        shutil.copytree(AQUI / d, destino / d, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns("__pycache__"))
     for f in COPIAR_FILES:
-        origen = AQUI / f
-        if origen.is_file():
-            shutil.copy2(origen, destino / f)
+        shutil.copy2(AQUI / f, destino / f)
 
     # los hooks activos, no el ejemplo: es el punto de copiarlos
-    ejemplo = AQUI / ".claude/settings.json.example"
-    if ejemplo.is_file():
-        (destino / ".claude/settings.json").write_text(
-            settings_con_interprete(ejemplo, interprete), encoding="utf-8"
-        )
-        shutil.copy2(ejemplo, destino / ".claude/settings.json.example")
+    ejemplo = AQUI / EJEMPLO_SETTINGS
+    (destino / ".claude/settings.json").write_text(
+        settings_con_interprete(ejemplo, interprete), encoding="utf-8"
+    )
+    shutil.copy2(ejemplo, destino / EJEMPLO_SETTINGS)
 
     ver = version_herramientas()
+    if ver == "sin-git":
+        print("AVISO: no se pudo leer la version de la caja con git. .herramientas-version\n"
+              "       va a decir 'sin-git' y no se va a saber de que version salio el repo.")
     (destino / ".herramientas-version").write_text(texto_version(ver), encoding="utf-8")
 
     (destino / "CLAUDE.md").write_text(
@@ -131,10 +181,21 @@ def main():
         git_ok = False
         print(f"AVISO: git no se pudo inicializar ({e}). Hacelo a mano.")
 
+    # verificar lo que se va a afirmar, no darlo por hecho
+    problemas = problemas_del_resultado(destino)
+    ok_hooks, detalle = probar_proteger(destino, interprete)
+    if problemas or not ok_hooks:
+        print(f"\nERROR: el repo en {destino} quedo incompleto:")
+        for p in problemas:
+            print(f"  {p}")
+        if not ok_hooks:
+            print(f"  {detalle}")
+        print("No usarlo así. Revisar la caja, borrar la carpeta y volver a crearlo.")
+        sys.exit(1)
+
     print(f"\nCreado: {destino}")
     print(f"Caja de herramientas: {AQUI.name} @ {ver}")
     print(f"Hooks configurados con: {interprete}")
-    _, detalle = probar_proteger(destino, interprete)   # el paso 3 dice que hacer si falla
     print(detalle)
     if git_ok:
         print("git iniciado, primer commit = solo el .gitignore")
@@ -143,9 +204,8 @@ def main():
     print("  2. Verificar que el .gitignore tapa lo que tiene que tapar:")
     print("       git check-ignore -v .env")
     print("     Si no devuelve nada, ese archivo se va a subir")
-    print("  3. Confirmar que arriba dice 'OK: proteger.py bloquea'. Si dice FALLA, no")
-    print("     seguir: los hooks no protegen. Para repetir la prueba, correr")
-    print("     activar-hooks.py dentro del repo nuevo.")
+    print("  3. Arriba dice 'OK: proteger.py bloquea': ya se probo. Para repetir la")
+    print("     prueba, correr activar-hooks.py dentro del repo nuevo.")
     print("  4. Abrir Claude Code EN ESTA CARPETA y preguntarle")
     print('     "Que subagentes tenes disponibles?": tienen que aparecer los 15')
     print(f"  5. Completar el CLAUDE.md y registrar la entrada en {AQUI.name}/INDICE-SISTEMAS.md")

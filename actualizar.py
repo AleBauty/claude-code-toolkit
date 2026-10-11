@@ -92,7 +92,8 @@ def validar(destino: Path):
 
 
 def armar_plan(destino: Path) -> dict:
-    plan = {"sobrescribe": [], "crea": [], "iguales": [], "respeta": [], "huerfanos": []}
+    plan = {"sobrescribe": [], "crea": [], "iguales": [], "respeta": [], "huerfanos": [],
+            "avisos": []}
     caja = de_la_caja()
     for f in caja:
         if not (destino / f).is_file():
@@ -103,6 +104,7 @@ def armar_plan(destino: Path) -> dict:
             plan["iguales"].append(f)
     for f in CREAR_SI_FALTA:
         if not (AQUI / f).is_file():
+            plan["avisos"].append(f"la caja no tiene {f}: no se puede ofrecer al repo")
             continue
         (plan["respeta"] if (destino / f).is_file() else plan["crea"]).append(f)
     # agentes que la caja no tiene: propios del repo o borrados de la caja. No se
@@ -119,6 +121,15 @@ def mostrar_plan(destino: Path, plan: dict, ver: str):
     print(f"Caja:  {AQUI.name} @ {ver}")
     actual = (destino / ".herramientas-version").read_text(encoding="utf-8").splitlines()
     print(f"Ahora: {actual[0] if actual else '(vacio)'}\n")
+
+    avisos = list(plan["avisos"])
+    if ver.startswith("sin-git"):
+        avisos.append("no se pudo leer la version de la caja con git: "
+                      ".herramientas-version va a decir 'sin-git'")
+    for a in avisos:
+        print(f"AVISO: {a}")
+    if avisos:
+        print()
 
     print("Se sobrescribe (de la caja, distinto en el repo):")
     for f in plan["sobrescribe"] or ["(nada)"]:

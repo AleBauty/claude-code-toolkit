@@ -120,6 +120,26 @@ def main():
         print("FALLA no existe actualizar.py")
         sys.exit(1)
 
+    # 0. si la caja no tiene algo de CREAR_SI_FALTA, el plan lo dice (antes: continue mudo)
+    sys.path.insert(0, str(RAIZ))
+    import actualizar as script
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
+        caja = Path(t) / "caja"
+        shutil.copytree(RAIZ / ".claude", caja / ".claude",
+                        ignore=shutil.ignore_patterns("__pycache__", "settings.json"))
+        for f in ("activar-hooks.py", "METODOLOGIA.md"):
+            shutil.copy2(RAIZ / f, caja / f)          # sin .env.example
+        destino = Path(t) / "repo"
+        (destino / ".claude/agents").mkdir(parents=True)
+        original = script.AQUI
+        script.AQUI = caja
+        try:
+            plan = script.armar_plan(destino)
+        finally:
+            script.AQUI = original
+        chequear(any(".env.example" in a for a in plan.get("avisos", [])),
+                 f"la caja sin .env.example no genera aviso en el plan: {plan.get('avisos')!a}")
+
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
         tmp = Path(t)
         repo = repo_viejo(tmp)
