@@ -11,7 +11,8 @@ Que cubre:
   asi que el propio hook lo bloqueaba, y usaba una ruta relativa.
 - Ninguna instruccion impresa por activar-hooks.py o nuevo.py lleva un comando
   con el patron destructivo en linea.
-- Si proteger.py no bloquea, activar-hooks.py lo dice y sale con 1.
+- Si proteger.py no bloquea, activar-hooks.py lo dice, sale con 1 y no
+  escribe settings.json: prueba primero, escribe despues.
 """
 import re
 import shutil
@@ -64,12 +65,19 @@ def main():
         chequear(not PATRON_RM.search(salida),
                  f"activar-hooks.py imprime un comando con el patron en linea: {salida!a}")
 
-        # 3. si proteger.py no bloquea, lo dice y sale con 1
+        # 3. si proteger.py no bloquea, lo dice, sale con 1 y NO escribe settings.json:
+        #    probar primero, escribir despues. Si no, queda un repo que dice tener
+        #    hooks activos sin haberlo comprobado.
         (caja / ".claude/hooks/proteger.py").write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+        (caja / ".claude/settings.json").unlink()
         r = activar(caja, cwd=tmp)
         salida = r.stdout + r.stderr
         chequear(r.returncode == 1 and "FALLA" in salida,
                  f"con un proteger.py roto: exit={r.returncode}, salida={salida[-300:]!a}")
+        chequear(not (caja / ".claude/settings.json").exists(),
+                 "con un proteger.py roto igual escribio settings.json")
+        chequear("Hooks activados" not in salida,
+                 f"con un proteger.py roto igual dice 'Hooks activados': {salida[-300:]!a}")
 
         # 4. nuevo.py tampoco imprime el comando roto
         destino = tmp / "sistema"

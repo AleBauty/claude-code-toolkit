@@ -33,17 +33,21 @@ def main():
         print("No escribo settings.json.")
         sys.exit(1)
 
+    # probar ANTES de escribir: si no, queda un settings.json que afirma hooks
+    # activos sin haberlo comprobado. proteger.py se llama por ruta directa, no
+    # necesita settings.json para correr.
+    ok, detalle = probar_proteger(AQUI, interprete)
+    if not ok:
+        print(detalle)
+        print("No escribo settings.json: los hooks no protegen. Si ya habia uno, quedo como estaba.")
+        sys.exit(1)
+
     destino = AQUI / ".claude/settings.json"
     destino.write_text(settings_con_interprete(ejemplo, interprete), encoding="utf-8")
 
     print(f"Hooks activados con: {interprete}")
     print(f"Escrito: {destino}")
-
-    # probar, no asumir: un hook que no bloquea no da error, simplemente deja pasar
-    ok, detalle = probar_proteger(AQUI, interprete)
     print(f"\n{detalle}")
-    if not ok:
-        sys.exit(1)
     print("Para repetir la prueba, volver a correr este script.")
 
 
