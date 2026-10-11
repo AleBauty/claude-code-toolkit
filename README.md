@@ -98,6 +98,7 @@ claude-code-toolkit/
 ├── tests/                red de proteger.py (python3 tests/test_proteger.py) y prueba de enrutado
 ├── activar-hooks.py      activa los hooks con el Python de esta máquina
 ├── nuevo.py              crea el repo de un sistema, con todo copiado
+├── actualizar.py         trae a un repo existente lo que es de la caja (muestra y pide confirmación)
 ├── COMO-CREAR-SISTEMA.md los 6 pasos
 ├── INDICE-SISTEMAS.example.md  plantilla del índice
 └── INDICE-SISTEMAS.md    qué sistemas hay y dónde está cada repo (local, no versionado)

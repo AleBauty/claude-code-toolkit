@@ -51,7 +51,7 @@ def main():
         version = (destino / ".herramientas-version").read_text(encoding="utf-8")
         chequear("copiar .claude/agents a mano" not in version,
                  ".herramientas-version tiene el procedimiento viejo (solo agentes)")
-        for debe in ("activar-hooks.py", ".claude/hooks/", "settings.json.example"):
+        for debe in ("actualizar.py", "activar-hooks.py", "settings.json.example"):
             chequear(debe in version, f".herramientas-version no menciona {debe}")
 
     for f in fallos:

@@ -58,15 +58,14 @@ def texto_version(ver: str) -> str:
         "Si la caja mejoro despues, este repo NO se actualiza solo. Es a proposito:\n"
         "un cambio en la caja no deberia cambiar el comportamiento de algo que ya\n"
         "entregaste.\n\n"
-        "Para traer la version nueva, desde la caja y con este repo sin cambios\n"
-        "sin commitear:\n"
-        "  1. Copiar .claude/hooks/ (los tres hooks e interprete.py),\n"
-        "     .claude/settings.json.example y activar-hooks.py.\n"
-        "  2. Correr activar-hooks.py en este repo: regenera .claude/settings.json,\n"
-        "     que no se versiona, y prueba que proteger.py bloquee.\n"
-        "  3. Reiniciar Claude Code desde la raiz de este repo: settings.json se lee\n"
-        "     al abrir la sesion.\n"
-        "No se copian datos/, CLAUDE.md ni .gitignore: son de este sistema.\n"
+        "Para traer la version nueva, con este repo sin cambios sin commitear,\n"
+        "desde la caja:\n"
+        "    python actualizar.py <ruta de este repo>\n"
+        "Muestra que va a cambiar y espera confirmacion. Sobrescribe lo que es de\n"
+        "la caja (hooks, agentes, settings.json.example, activar-hooks.py,\n"
+        "METODOLOGIA.md), no toca lo que es de este repo (CLAUDE.md, datos/,\n"
+        ".gitignore, src/, tests/, docs/) y regenera .claude/settings.json.\n"
+        "Despues: reiniciar Claude Code desde la raiz de este repo.\n"
     )
 
 
@@ -115,7 +114,8 @@ def main():
     (destino / ".herramientas-version").write_text(texto_version(ver), encoding="utf-8")
 
     (destino / "CLAUDE.md").write_text(
-        PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver, caja=AQUI.name), encoding="utf-8"
+        PLANTILLA_CLAUDE.format(nombre=nombre, ver=ver, caja=AQUI.name,
+                                parrafo_hooks=PARRAFO_HOOKS), encoding="utf-8"
     )
 
     # git: .gitignore primero y solo
@@ -151,6 +151,14 @@ def main():
     print(f"  5. Completar el CLAUDE.md y registrar la entrada en {AQUI.name}/INDICE-SISTEMAS.md")
     print("     (no versionado; si no existe, copiarlo de INDICE-SISTEMAS.example.md)")
 
+
+# va en la plantilla y actualizar.py lo imprime para pegar a mano: una sola fuente
+PARRAFO_HOOKS = """\
+**Al empezar una sesión, verificar que exista `.claude/settings.json`.** Si no
+existe, los hooks no están activos: nada bloquea comandos destructivos ni
+credenciales. Avisarle al usuario y ofrecer correr `activar-hooks.py`. Pasa al
+clonar el repo en otra máquina: `nuevo.py` ya lo genera al crear un repo, pero
+un clon no lo trae porque no se versiona."""
 
 PLANTILLA_CLAUDE = """# {nombre}
 
@@ -193,11 +201,7 @@ Se activan corriendo `activar-hooks.py`, que escribe `.claude/settings.json`
 con el intérprete de Python que funciona en esa máquina. Ese archivo no se
 versiona.
 
-**Al empezar una sesión, verificar que exista `.claude/settings.json`.** Si no
-existe, los hooks no están activos: nada bloquea comandos destructivos ni
-credenciales. Avisarle al usuario y ofrecer correr `activar-hooks.py`. Pasa al
-clonar el repo en otra máquina: `nuevo.py` ya lo genera al crear un repo, pero
-un clon no lo trae porque no se versiona.
+{parrafo_hooks}
 
 ## Git
 
