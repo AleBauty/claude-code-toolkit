@@ -93,6 +93,8 @@ def main():
         "proteger.py ausente": ("proteger.py", None, False),
         "secretos.py roto": ("secretos.py", NO_HACE_NADA, False),
         "secretos.py ausente": ("secretos.py", None, False),
+        "alcance.py ausente": ("alcance.py", None, False),
+        "alcance.py roto": ("alcance.py", NO_HACE_NADA, False),
         "verificar.py roto": ("verificar.py", NO_HACE_NADA, True),
     }
     for nombre, (hook, contenido, escribe) in casos.items():

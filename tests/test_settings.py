@@ -71,7 +71,7 @@ def correr(sh: str, cmd: str, proyecto: Path, cwd: Path, entrada: dict) -> subpr
 def main():
     cfg = json.loads(EJEMPLO.read_text(encoding="utf-8"))
     cmds = comandos(cfg)
-    chequear(len(cmds) == 3, f"se esperaban 3 hooks, hay {len(cmds)}")
+    chequear(len(cmds) == 4, f"se esperaban 4 hooks, hay {len(cmds)}")
 
     # 1. forma: ruta absoluta via la variable, entre comillas (espacios en la ruta)
     for c in cmds:
