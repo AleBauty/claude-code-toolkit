@@ -93,13 +93,15 @@ que el dashboard tire abajo la base de producción.
 
 ## Hooks — verificación que no depende del modelo
 
-En `.claude/hooks/` hay tres scripts que corren automáticamente:
+En `.claude/hooks/` hay cinco scripts que corren automáticamente:
 
 | Hook | Cuándo | Qué hace |
 |---|---|---|
 | `verificar.py` | después de Edit/Write | corre lint y typecheck; si fallan, le devuelve el error a Claude (no bloquea: el archivo ya se escribió) |
 | `proteger.py` | antes de Bash y PowerShell | **bloquea** comandos destructivos |
 | `secretos.py` | antes de Edit/Write | **bloquea** si detecta credenciales |
+| `alcance.py` | antes de Edit/Write | **bloquea** a `revisor` y `seguridad` fuera de `docs/<agente>/` |
+| `estado.py` | al abrir la sesión | inyecta el "Estado actual" de `BITACORA.md` (§12 de `METODOLOGIA.md`) |
 
 Esto es lo que diferencia este espacio de un catálogo de prompts: no es el modelo
 prometiendo que revisó, es un script que verifica y corta.

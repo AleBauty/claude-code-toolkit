@@ -1,7 +1,7 @@
 # Claude Code Toolkit
 
 Caja de herramientas para construir software. 15 agentes, una metodología y
-tres hooks de verificación automática.
+cinco hooks automáticos.
 
 > Proyecto personal, no oficial. No está afiliado a Anthropic ni avalado por
 > Anthropic; "Claude" y "Claude Code" son marcas de Anthropic.
@@ -38,6 +38,8 @@ corrido.
 | `verificar.py` | después de editar | lint + typecheck; si fallan, le devuelve el error a Claude (no bloquea: el archivo ya se escribió) |
 | `proteger.py` | antes de un Bash | **bloquea** `rm -rf`, `DROP TABLE`, `--force`, `curl \| sh` |
 | `secretos.py` | antes de escribir | **bloquea** si detecta API keys, tokens, claves privadas |
+| `alcance.py` | antes de escribir | **bloquea** a `revisor` y `seguridad` fuera de su `docs/<agente>/`: el revisor no escribe lo que revisa |
+| `estado.py` | al abrir la sesión | inyecta el "Estado actual" de `BITACORA.md`, para que ninguna sesión arranque en blanco |
 
 Un hook que sale con código 2 **corta la acción** y le devuelve el error a Claude
 para que lo corrija. No es una promesa: es un script.
