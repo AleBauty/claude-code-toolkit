@@ -91,6 +91,19 @@ def main():
                      f"{nombre}: el error no nombra {nombrado}: {salida[-200:]!a}")
             chequear(not destino.exists(), f"{nombre}: creo la carpeta destino igual")
 
+    # 0c. verificar.py roto: es de CALIDAD, no impide crear el repo. Avisa y sigue,
+    #     igual que activar-hooks.py (test_activar). Si esto empieza a fallar,
+    #     alguien lo trato como de seguridad.
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
+        caja = copia_de_la_caja(Path(t))
+        (caja / ".claude/hooks/verificar.py").write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+        destino = Path(t) / "sistema"
+        codigo, salida = correr_nuevo(caja, destino)
+        chequear(codigo == 0 and (destino / ".claude/settings.json").is_file(),
+                 f"verificar.py roto impidio crear el repo: exit={codigo} {salida[-250:]!a}")
+        chequear("AVISO" in salida and "verificar.py" in salida,
+                 f"verificar.py roto: no avisa: {salida[-250:]!a}")
+
     # 0b. caja sin git: la version no se puede leer, tiene que avisar
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
         caja = copia_de_la_caja(Path(t))

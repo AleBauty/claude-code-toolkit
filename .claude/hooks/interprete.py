@@ -44,25 +44,57 @@ def settings_con_interprete(ejemplo: Path, interprete: str) -> str:
     return json.dumps(cfg, indent=2, ensure_ascii=False) + "\n"
 
 
-def probar_proteger(raiz: Path, interprete: str) -> tuple[bool, str]:
-    """Le manda a proteger.py un comando destructivo y confirma que bloquea (exit 2).
+# Credencial de prueba armada por partes A PROPOSITO, y la linea que la contiene
+# tambien: escrita entera, secretos.py bloquea el Edit/Write de este mismo
+# archivo. No juntar las partes.
+_CREDENCIAL_DE_PRUEBA = "sk-" + "pRu3bA" + "dEl0sH00ks" + "N0eSr3aL"
+_LINEA_CON_CREDENCIAL = "API_KEY = " + '"' + _CREDENCIAL_DE_PRUEBA + '"'
 
-    El JSON se arma aca y no en una linea de shell: un comando de shell que lo
-    contenga escrito lo bloquea el propio hook antes de que llegue a correr.
+# (hook, entrada, exit esperado, marca en stderr, que prueba, es de seguridad)
+# La marca es lo que distingue al hook de verdad: sin el archivo, Python tambien
+# sale con 2 ("can't open file"), y un exit 2 solo pasaria por un bloqueo.
+# El JSON se arma aca y no en una linea de shell: un comando de shell que lo
+# contenga escrito lo bloquea el propio hook antes de que llegue a correr.
+PRUEBAS = [
+    ("proteger.py", json.dumps({"tool_name": "Bash", "tool_input": {"command": "rm -rf /tmp/prueba"}}),
+     2, "Comando bloqueado", "bloquea un comando destructivo", True),
+    ("secretos.py", json.dumps({"tool_name": "Write", "tool_input": {
+        "file_path": "config.py", "content": _LINEA_CON_CREDENCIAL}}),
+     2, "Posible credencial", "bloquea una credencial", True),
+    # calidad: en un repo sin stack no hay nada que verificar; se prueba que
+    # arranque y avise ante una entrada ilegible (bloque D)
+    ("verificar.py", "{entrada rota", 1, "AVISO", "arranca y avisa ante una entrada ilegible", False),
+]
+
+
+def probar_hooks(raiz: Path, interprete: str) -> tuple[bool, list[str]]:
+    """Corre cada hook con una entrada que tiene que hacerlo reaccionar.
+
+    Devuelve (los de seguridad funcionan, lineas para mostrar). Si falla uno de
+    seguridad, el primer valor es False: no hay que escribir settings.json. Si
+    falla verificar.py, la linea es un AVISO y el primer valor no cambia.
     La ruta es absoluta: no depende del directorio desde donde se llame.
     """
-    hook = Path(raiz).resolve() / ".claude" / "hooks" / "proteger.py"
-    entrada = json.dumps({"tool_name": "Bash", "tool_input": {"command": "rm -rf /tmp/prueba"}})
-    try:
-        r = subprocess.run([interprete, str(hook)], input=entrada.encode("utf-8"),
-                           capture_output=True, timeout=30)
-    except (OSError, subprocess.TimeoutExpired) as e:
-        return False, f"no se pudo correr {hook}: {e}"
-    if r.returncode == 2:
-        return True, "OK: proteger.py bloquea un comando destructivo (exit 2)."
-    err = r.stderr.decode("utf-8", errors="replace").strip()
-    return False, (f"FALLA: proteger.py no bloqueo un comando destructivo "
-                   f"(exit {r.returncode}, se esperaba 2). {err[:300]}")
+    seguridad_ok, lineas = True, []
+    for hook, entrada, esperado, marca, que, de_seguridad in PRUEBAS:
+        ruta = Path(raiz).resolve() / ".claude" / "hooks" / hook
+        try:
+            r = subprocess.run([interprete, str(ruta)], input=entrada.encode("utf-8"),
+                               capture_output=True, timeout=30)
+            codigo, err = r.returncode, r.stderr.decode("utf-8", errors="replace").strip()
+        except (OSError, subprocess.TimeoutExpired) as e:
+            codigo, err = None, f"no se pudo correr: {e}"
+        if codigo == esperado and marca in err:
+            lineas.append(f"OK: {hook} {que} (exit {codigo}).")
+            continue
+        detalle = (f"{hook} no {que}: exit {codigo}, se esperaba {esperado} con "
+                   f"'{marca}'. {err[:200]}")
+        if de_seguridad:
+            seguridad_ok = False
+            lineas.append(f"FALLA: {detalle}")
+        else:
+            lineas.append(f"AVISO: {detalle} (es de calidad: no impide activar los otros)")
+    return seguridad_ok, lineas
 
 
 def error_sin_interprete() -> str:

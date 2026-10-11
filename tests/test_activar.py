@@ -13,6 +13,10 @@ Que cubre:
   con el patron destructivo en linea.
 - Si proteger.py no bloquea, activar-hooks.py lo dice, sale con 1 y no
   escribe settings.json: prueba primero, escribe despues.
+- Prueba los tres hooks. proteger.py y secretos.py (seguridad): si fallan o
+  faltan, no escribe settings.json. verificar.py (calidad): prueba de humo; si
+  falla, avisa y escribe igual. Un exit 2 solo no alcanza: sin el archivo,
+  Python tambien sale con 2.
 """
 import re
 import shutil
@@ -78,6 +82,43 @@ def main():
                  "con un proteger.py roto igual escribio settings.json")
         chequear("Hooks activados" not in salida,
                  f"con un proteger.py roto igual dice 'Hooks activados': {salida[-300:]!a}")
+
+    # 3b. los tres hooks. Seguridad (proteger, secretos): si fallan, no se escribe
+    #     settings.json. Calidad (verificar): prueba de humo; si falla, aviso y se
+    #     escribe igual (mismo criterio que el bloque D).
+    NO_HACE_NADA = "import sys\nsys.exit(0)\n"
+    casos = {
+        # sin el archivo, Python sale con 2 ("can't open file"): un exit 2 solo no
+        # prueba que el hook bloquee; hay que ver su mensaje
+        "proteger.py ausente": ("proteger.py", None, False),
+        "secretos.py roto": ("secretos.py", NO_HACE_NADA, False),
+        "secretos.py ausente": ("secretos.py", None, False),
+        "verificar.py roto": ("verificar.py", NO_HACE_NADA, True),
+    }
+    for nombre, (hook, contenido, escribe) in casos.items():
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
+            caja = copia_de_la_caja(Path(t))
+            p = caja / ".claude/hooks" / hook
+            p.unlink() if contenido is None else p.write_text(contenido, encoding="utf-8")
+            r = activar(caja, cwd=Path(t))
+            salida = r.stdout + r.stderr
+            existe = (caja / ".claude/settings.json").exists()
+            if escribe:
+                chequear(r.returncode == 0 and existe and "AVISO" in salida and hook in salida,
+                         f"{nombre}: tenia que avisar y escribir igual: exit={r.returncode} "
+                         f"settings={existe} {salida[-250:]!a}")
+            else:
+                chequear(r.returncode == 1 and not existe and hook in salida,
+                         f"{nombre}: tenia que fallar sin escribir settings.json: exit={r.returncode} "
+                         f"settings={existe} {salida[-250:]!a}")
+
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as t:
+        tmp = Path(t)
+        caja = copia_de_la_caja(tmp)
+        r = activar(caja, cwd=tmp)
+        salida = r.stdout + r.stderr
+        for ok in ("OK: proteger.py bloquea", "OK: secretos.py bloquea", "OK: verificar.py"):
+            chequear(ok in salida, f"no informa '{ok}': {salida[-300:]!a}")
 
         # 4. nuevo.py tampoco imprime el comando roto
         destino = tmp / "sistema"

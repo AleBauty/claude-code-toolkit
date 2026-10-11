@@ -17,7 +17,7 @@ AQUI = Path(__file__).resolve().parent
 
 sys.path.insert(0, str(AQUI / ".claude/hooks"))
 from interprete import (  # noqa: E402
-    detectar_interprete, error_sin_interprete, probar_proteger, settings_con_interprete,
+    detectar_interprete, error_sin_interprete, probar_hooks, settings_con_interprete,
 )
 
 
@@ -34,12 +34,13 @@ def main():
         sys.exit(1)
 
     # probar ANTES de escribir: si no, queda un settings.json que afirma hooks
-    # activos sin haberlo comprobado. proteger.py se llama por ruta directa, no
-    # necesita settings.json para correr.
-    ok, detalle = probar_proteger(AQUI, interprete)
+    # activos sin haberlo comprobado. Los hooks se llaman por ruta directa, no
+    # necesitan settings.json para correr.
+    ok, lineas = probar_hooks(AQUI, interprete)
     if not ok:
-        print(detalle)
-        print("No escribo settings.json: los hooks no protegen. Si ya habia uno, quedo como estaba.")
+        print("\n".join(lineas))
+        print("No escribo settings.json: los hooks de seguridad no protegen. "
+              "Si ya habia uno, quedo como estaba.")
         sys.exit(1)
 
     destino = AQUI / ".claude/settings.json"
@@ -47,7 +48,7 @@ def main():
 
     print(f"Hooks activados con: {interprete}")
     print(f"Escrito: {destino}")
-    print(f"\n{detalle}")
+    print("\n" + "\n".join(lineas))
     print("Para repetir la prueba, volver a correr este script.")
 
 

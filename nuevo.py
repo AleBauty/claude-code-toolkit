@@ -24,7 +24,7 @@ AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI / ".claude/hooks"))
 try:
     from interprete import (  # noqa: E402
-        detectar_interprete, error_sin_interprete, probar_proteger, settings_con_interprete,
+        detectar_interprete, error_sin_interprete, probar_hooks, settings_con_interprete,
     )
 except ImportError as e:
     print(f"ERROR: falta .claude/hooks/interprete.py en la caja ({e}). No creo nada.")
@@ -183,20 +183,22 @@ def main():
 
     # verificar lo que se va a afirmar, no darlo por hecho
     problemas = problemas_del_resultado(destino)
-    ok_hooks, detalle = probar_proteger(destino, interprete)
+    ok_hooks, lineas = probar_hooks(destino, interprete)
     if problemas or not ok_hooks:
         print(f"\nERROR: el repo en {destino} quedo incompleto:")
         for p in problemas:
             print(f"  {p}")
         if not ok_hooks:
-            print(f"  {detalle}")
+            for linea in lineas:
+                print(f"  {linea}")
         print("No usarlo así. Revisar la caja, borrar la carpeta y volver a crearlo.")
         sys.exit(1)
 
     print(f"\nCreado: {destino}")
     print(f"Caja de herramientas: {AQUI.name} @ {ver}")
     print(f"Hooks configurados con: {interprete}")
-    print(detalle)
+    for linea in lineas:
+        print(linea)
     if git_ok:
         print("git iniciado, primer commit = solo el .gitignore")
     print("\nFalta hacer, en este orden:")
@@ -204,7 +206,7 @@ def main():
     print("  2. Verificar que el .gitignore tapa lo que tiene que tapar:")
     print("       git check-ignore -v .env")
     print("     Si no devuelve nada, ese archivo se va a subir")
-    print("  3. Arriba dice 'OK: proteger.py bloquea': ya se probo. Para repetir la")
+    print("  3. Arriba dice OK para cada hook: ya se probaron. Para repetir la")
     print("     prueba, correr activar-hooks.py dentro del repo nuevo.")
     print("  4. Abrir Claude Code EN ESTA CARPETA y preguntarle")
     print('     "Que subagentes tenes disponibles?": tienen que aparecer los 15')
