@@ -4,8 +4,7 @@
 
 <!-- 3 a 6 lineas. Se REESCRIBE, no se acumula: etapa, que esta bloqueado y
      esperando que. Es lo unico que se lee en cada sesion. -->
-- Etapa: caja con traspaso entre agentes (§11), bitácora (§12), `alcance.py` y `estado.py`; `actualizar.py` lleva todo a los repos generados.
-- **Pendiente:** prueba de punta a punta de `alcance.py` con el `revisor` real, en la primera sesión reiniciada: escribir en `docs/revisor/` tiene que pasar; en `src/`, bloquearse con "Bloqueado por alcance.py". En la sesión que lo creó no se pudo: los agentes se cargan al arrancar.
+- Etapa: caja con traspaso entre agentes (§11), bitácora (§12), `alcance.py` y `estado.py`, verificados en vivo; `actualizar.py` lleva todo a los repos generados.
 - **Pendiente:** automatizacion no recibió ninguno de los arreglos de hoy, ni los de la auditoría de hooks. Correr `actualizar.py` desde su sesión, mirando antes su `git status`.
 - **Pendiente:** stocky está en `17a2971`: le faltan `alcance.py`, `estado.py`, el traspaso de los 9 agentes y la §11/§12. Mismo camino.
 
@@ -34,6 +33,12 @@
 
 <!-- Append-only, lo nuevo arriba. "### AAAA-MM-DD — tema": que se hizo, y
      "  - No sirvio: ... (por que)". Se lee solo cuando se pregunta por algo viejo. -->
+
+### 2026-10-12 — `estado.py` y `alcance.py` verificados en vivo
+
+- Con la sesión reiniciada, `estado.py` inyectó el Estado actual al retomarla (`SessionStart:resume`).
+- El hook disparó como `resume`, no como `startup`: VS Code reanudó la sesión en vez de abrir una nueva. Aun así, las definiciones de los agentes se recargaron (el `revisor` ya tenía Write). O sea: "reiniciar" reanudando alcanza para recargar los agentes; no hace falta abrir una sesión nueva.
+- Prueba de punta a punta de `alcance.py` con el `revisor` real: el Write en `docs/revisor/` pasó; el Write en `src/` se bloqueó con "Bloqueado por alcance.py: el agente revisor solo escribe en docs/revisor/…", sin "FALLO EL HOOK". Verificado en disco: `src/` no se creó. Los archivos de prueba se borraron.
 
 ### 2026-10-11 — Traspaso, bitácora, `alcance.py` y `estado.py`
 
