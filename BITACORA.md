@@ -4,9 +4,8 @@
 
 <!-- 3 a 6 lineas. Se REESCRIBE, no se acumula: etapa, que esta bloqueado y
      esperando que. Es lo unico que se lee en cada sesion. -->
-- Etapa: caja con traspaso entre agentes (§11), bitácora (§12), `alcance.py` y `estado.py`, verificados en vivo; `actualizar.py` lleva todo a los repos generados.
+- Etapa: caja con traspaso entre agentes (§11), bitácora (§12), `alcance.py` y `estado.py`, verificados en vivo; `actualizar.py` lleva todo a los repos generados. stocky está al día (`18d9813`).
 - **Pendiente:** automatizacion no recibió ninguno de los arreglos de hoy, ni los de la auditoría de hooks. Correr `actualizar.py` desde su sesión, mirando antes su `git status`.
-- **Pendiente:** stocky está en `17a2971`: le faltan `alcance.py`, `estado.py`, el traspaso de los 9 agentes y la §11/§12. Mismo camino.
 
 ## Decisiones cerradas
 
@@ -33,6 +32,12 @@
 
 <!-- Append-only, lo nuevo arriba. "### AAAA-MM-DD — tema": que se hizo, y
      "  - No sirvio: ... (por que)". Se lee solo cuando se pregunta por algo viejo. -->
+
+### 2026-10-12 — Propagación a stocky (`17a2971` → `18d9813`)
+
+- `actualizar.py` contra stocky, por primera vez con criterio por dueño. Plan: 13 archivos sobrescritos (9 agentes con traspaso, `METODOLOGIA.md`, `settings.json.example`, `activar-hooks.py`, `interprete.py`) y 2 creados (`alcance.py`, `estado.py`). Su `BITACORA.md`, `CLAUDE.md`, `.env.example`, `datos/` y `scripts/` no se tocaron (verificado por hash).
+- Antes de aplicar se comprobó que los 13 archivos eran idénticos a la versión `17a2971` en stocky: no había nada propio que perder.
+- `activar-hooks.py` en stocky: los cinco hooks dieron OK. stocky lo commiteó en su sesión (`38d6f0c`).
 
 ### 2026-10-12 — `estado.py` y `alcance.py` verificados en vivo
 
